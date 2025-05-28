@@ -1,0 +1,247 @@
+
+<style>
+  :root {
+    --primary: #00d9ff;
+    --bg: #0e0e1a;
+    --card-bg: rgba(30, 30, 60, 0.6);
+    --border: rgba(255, 255, 255, 0.1);
+    --accent: #00ffc6;
+    --text-light: #ccc;
+  }
+  
+  body {
+    background: #0f0f1a;
+    color: #e5e5e5;
+    font-family: 'Orbitron', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+  .two-column {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .left-column,
+  .right-column {
+    flex: 1 1 480px;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+  }
+
+  h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+    color: var(--primary);
+  }
+
+  .chat-box {
+    flex-grow: 1;
+    height: 400px;
+    overflow-y: auto;
+    background: #151522;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chat-msg {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed #333;
+  }
+
+  .chat-msg strong {
+    color: var(--accent);
+  }
+
+  .chat-msg .meta {
+    font-size: 0.75rem;
+    color: #888;
+  }
+
+  .chat-form {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .chat-form input[type="text"] {
+    flex-grow: 1;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: none;
+    background: #1f1f2e;
+    color: white;
+  }
+
+  .chat-form button {
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .chat-form button:hover {
+    background: #00e2ff;
+  }
+
+  .member, .request {
+    background: #1e1e30;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+  }
+
+  .member:hover, .request:hover {
+    transform: translateY(-2px);
+  }
+
+  .role-tag {
+    font-size: 0.85rem;
+    background: var(--primary);
+    color: black;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .actions button,
+  .danger {
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .actions button {
+    background: var(--accent);
+    color: black;
+  }
+
+  .danger {
+    background: crimson;
+    color: white;
+  }
+
+  .danger:hover {
+    background: #c21830;
+  }
+
+  .no-requests {
+    color: #999;
+    font-style: italic;
+    margin-top: 0.5rem;
+  }
+
+  .back-dashboard-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(0, 217, 255, 0.5);
+    transition: background-color 0.3s ease;
+    margin: 2rem auto 0;
+    display: block;
+    max-width: 200px;
+    text-align: center;
+  }
+
+  .back-dashboard-btn:hover {
+    background-color: #0099cc;
+  }
+</style>
+
+<div class="card two-column">
+  <!-- Guild Chat Left -->
+  <div class="left-column">
+    <h2>Guild Chat</h2>
+    <div class="chat-box">
+      {% for msg in messages %}
+      <div class="chat-msg">
+        <strong>{{ msg.user.username }}</strong>: {{ msg.content }}<br>
+        <span class="meta">{{ msg.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <form class="chat-form" method="post" action="/guilds/{{ guild.id }}/messages">
+      <input type="text" name="content" required placeholder="Write a message..." />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <!-- Members & Requests Right -->
+  <div class="right-column">
+    <h2>Members ({{ members|length }})</h2>
+    <div class="member-list">
+      {% for member in members %}
+      <div class="member">
+        {{ member.user.username }}
+        <span class="role-tag">{{ member.role }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if user_role != "Founder" %}
+    <form method="post" action="/guilds/{{ guild.id }}/leave" style="margin-top: 1rem;">
+      <button class="danger" type="submit">Leave Guild</button>
+    </form>
+    {% endif %}
+
+    {% if user_role == "Founder" %}
+    <h2>Join Requests</h2>
+    {% if join_requests %}
+    <div class="request-list">
+      {% for req in join_requests %}
+      <div class="request">
+        {{ req.user.username }}
+        <div class="actions">
+          <form method="post" action="/guilds/{{ guild.id }}/requests/{{ req.user.id }}/approve">
+            <button>Approve</button>
+          </form>
+          <form method="post" action="/guilds/{{ guild.id }}/requests/{{ req.user.id }}/reject">
+            <button class="danger">Reject</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-requests">No pending join requests.</p>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<form action="/dashboard" method="get">
+  <button type="submit" class="back-dashboard-btn">← Back to Dashboard</button>
+</form>
+

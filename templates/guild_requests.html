@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Join Requests</title>
+</head>
+<body>
+  <h1>Join Requests for Guild {{ guild_id }}</h1>
+
+  <ul>
+    {% for req in requests %}
+      <li>
+        {{ req.user.username }}
+        <form style="display:inline" method="post" action="/guilds/{{ guild_id }}/requests/{{ req.user.id }}/approve">
+          <button type="submit">Approve</button>
+        </form>
+      </li>
+    {% else %}
+      <li>No pending join requests</li>
+    {% endfor %}
+  </ul>
+
+  <p><a href="/guilds/{{ guild_id }}">Back to Guild</a></p>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<form method="post" enctype="multipart/form-data">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      font-family: 'Orbitron', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0b0c17, #12131f);
+      color: #e0f7f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    form {
+      background: #1e213a;
+      padding: 3rem 2.5rem;
+      border-radius: 18px;
+      box-shadow:
+        0 0 20px 2px #00fff7aa,
+        inset 0 0 10px 1px #00fff7cc;
+      max-width: 420px;
+      width: 100%;
+      color: #b0e9ef;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    h1 {
+      margin-bottom: 1.8rem;
+      font-size: 2.2rem;
+      font-weight: 900;
+      text-align: center;
+      color: #00fff7;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 1.4rem;
+    }
+
+    input[type="text"],
+    textarea,
+    input[type="file"] {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      background: #131726;
+      color: #b0e9ef;
+      font-size: 1rem;
+      font-family: 'Segoe UI', sans-serif;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+      resize: vertical;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus,
+    input[type="file"]:focus {
+      outline: none;
+      border-color: #00fff7;
+      box-shadow: 0 0 12px #00fff7aa;
+    }
+
+    textarea {
+      min-height: 110px;
+    }
+
+    .file-note {
+      font-size: 0.85rem;
+      color: #4499a6;
+      margin-top: -1rem;
+      margin-bottom: 1.8rem;
+      font-style: italic;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px 0;
+      background: linear-gradient(90deg, #00fff7, #00d2f7);
+      border: none;
+      border-radius: 25px;
+      color: #0b0c17;
+      font-weight: 900;
+      font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: 0 0 18px #00d2f7;
+      transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+      background: linear-gradient(90deg, #00d2f7, #00fff7);
+      box-shadow: 0 0 28px #00fff7;
+      color: #fff;
+    }
+  </style>
+
+  <h1>Edit Profile</h1>
+
+  <label for="full_name">
+    Full Name
+    <input type="text" id="full_name" name="full_name" value="{{ user.full_name or '' }}" placeholder="Your full name">
+  </label>
+
+  <label for="bio">
+    Bio
+    <textarea id="bio" name="bio" placeholder="Tell us about yourself...">{{ user.bio or '' }}</textarea>
+  </label>
+
+  <label for="avatar">
+    Upload Avatar
+    <input type="file" id="avatar" name="avatar" accept="image/*">
+  </label>
+  <div class="file-note">Recommended size: 256x256 px. Max 2MB.</div>
+
+  <button type="submit">Update Profile</button>
+</form>

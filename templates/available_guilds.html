@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Available Guilds</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #0f0f1f;
+      color: #eee;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      color: #00d9ff;
+      margin-bottom: 1rem;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .create-btn {
+      background: #28a745;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+    }
+    .create-btn:hover {
+      background: #218838;
+    }
+    .guild-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .guild-card {
+      background: #1a1a2e;
+      border: 1px solid #333;
+      padding: 1rem;
+      border-radius: 8px;
+      width: 250px;
+      box-shadow: 0 0 10px rgba(0,255,255,0.1);
+      transition: transform 0.2s ease;
+    }
+    .guild-card:hover {
+      transform: translateY(-5px);
+    }
+    .guild-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.3rem;
+      color: #00c3ff;
+    }
+    .guild-description {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin: 0.5rem 0 1rem;
+    }
+    .view-btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #2d89ef;
+      color: white;
+      border-radius: 6px;
+      font-weight: bold;
+      text-decoration: none;
+      transition: background 0.3s ease;
+    }
+    .view-btn:hover {
+      background: #1b5bbf;
+    }
+    a.back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: #00d9ff;
+      text-decoration: none;
+    }
+    a.back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <h1>Available Guilds</h1>
+    <a href="/guilds/create" class="create-btn">+ Create Guild</a>
+  </div>
+
+  <div class="guild-list">
+    {% for guild in guilds %}
+    <div class="guild-card">
+      <div class="guild-name">{{ guild.name }}</div>
+      <p class="guild-description">{{ guild.description or "No description." }}</p>
+      <a href="/guilds/{{ guild.id }}" class="view-btn">View Guild</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+</body>
+</html>

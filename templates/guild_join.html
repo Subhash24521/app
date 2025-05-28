@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: #0f0f1f;
+    color: #eee;
+    text-align: center;
+    /* Removed max-width, margin, padding, border, box-shadow */
+  }
+
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.8rem;
+    color: #00c3ff;
+    margin-bottom: 1.8rem;
+    letter-spacing: 0.06em;
+    user-select: none;
+  }
+
+  p {
+    font-size: 1.15rem;
+    color: #b0b8c1;
+    margin-bottom: 3rem;
+    line-height: 1.5;
+  }
+
+  form button.join-btn {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    border: none;
+    padding: 0.85rem 3rem;
+    border-radius: 14px;
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.6);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  form button.join-btn:hover {
+    background: linear-gradient(135deg, #218838 0%, #19692c 100%);
+    box-shadow: 0 6px 18px rgba(33, 136, 56, 0.8);
+  }
+
+  a.back-link {
+    display: inline-block;
+    margin-top: 3.8rem;
+    color: #00c3ff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: color 0.25s ease;
+  }
+
+  a.back-link:hover {
+    text-decoration: underline;
+    color: #0099dd;
+  }
+</style>
+
+<h1>Join Guild</h1>
+<p>You are not a member of this guild yet. Click the button below to join the guild.</p>
+
+<form method="post" action="/guilds/{{ guild.id }}/join">
+  <button type="submit" class="join-btn">Join Guild</button>
+</form>
+
+<a href="/guilds" class="back-link">← Back to Guild List</a>
+{% endblock %}

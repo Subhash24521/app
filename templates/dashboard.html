@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block title %}HoloZone Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  :root {
+    --bg: #0e0e1a;
+    --panel: rgba(255, 255, 255, 0.05);
+    --glass: rgba(255, 255, 255, 0.08);
+    --primary: #00ffe0;
+    --secondary: #ff00e0;
+    --text-main: #e6faff;
+    --text-sub: #9caec2;
+    --radius: 18px;
+    --glow: 0 0 16px #00ffe0a8;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Orbitron', sans-serif;
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+  }
+
+  .dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: auto;
+  }
+
+  @media (min-width: 768px) {
+    .dashboard-container {
+      flex-direction: row;
+    }
+  }
+
+  .panel {
+    background: var(--glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius);
+    box-shadow: var(--glow);
+    padding: 2rem;
+    flex: 1;
+    transition: 0.3s ease-in-out;
+  }
+
+  .welcome h1 {
+    font-size: 2.4rem;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+
+  .user-summary {
+    display: flex;
+    align-items: center;
+    margin: 2rem 0;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    font-size: 2rem;
+    color: white;
+    font-weight: bold;
+    background: radial-gradient(circle at 30% 30%, var(--secondary), var(--primary));
+    box-shadow: 0 0 20px var(--primary), 0 0 10px var(--secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 3s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .user-info {
+    flex: 1;
+  }
+
+  .user-info .username {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .level {
+    margin-top: 0.3rem;
+  }
+
+  .level-bar {
+    height: 10px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .progress {
+    height: 100%;
+    width: {{ user.level_progress }}%;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    animation: growBar 2s ease-in-out forwards;
+  }
+
+  @keyframes growBar {
+    from { width: 0; }
+    to { width: {{ user.level_progress }}%; }
+  }
+
+  .btn-glow {
+    padding: 0.65rem 1.3rem;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 0 10px var(--primary);
+    transition: transform 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-glow:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px var(--secondary);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 0 14px rgba(0, 255, 224, 0.08);
+    transition: 0.3s ease;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(0, 255, 224, 0.35);
+  }
+
+  .stat-card i {
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-top: 0.4rem;
+  }
+
+  .actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .panel h2 {
+    color: var(--primary);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .panel p {
+    color: var(--text-sub);
+  }
+
+.avatar img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 20px var(--primary), 0 0 10px var(--secondary);
+  animation: pulse 3s infinite;
+}
+
+</style>
+
+<div class="dashboard-container neon-glow">
+  <div class="panel">
+    <div class="welcome">
+      <h1>Hello, {{ user.username }}</h1>
+      <p>Welcome to your futuristic control center 🌌</p>
+    </div>
+
+    <div class="user-summary">
+      <div class="avatar">
+  {% if user.avatar_url %}
+    <img src="{{ user.avatar_url }}" alt="{{ user.username }}'s avatar" />
+  {% else %}
+    {{ user.username[0]|upper }}
+  {% endif %}
+</div>
+      <div class="user-info">
+        <div class="username">{{ user.username }}</div>
+        <div class="level">Level {{ user.level }}</div>
+        <div class="level-bar"><div class="progress"></div></div>
+        <div style="margin-top: 1rem;">
+          <button class="btn-glow" onclick="location.href='/profile'">
+            <i class="fas fa-user"></i> Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <i class="fas fa-coins"></i>
+        <div>Coins</div>
+        <div class="stat-value">{{ user.coins }}</div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-trophy"></i>
+        <div>High Score</div>
+        <div class="stat-value">{{ user.high_score }}</div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-crown"></i>
+        <div>Achievements</div>
+        <div class="stat-value">{{ user.achievements_count }}</div>
+      </div>
+      <div class="stat-card">
+        <i class="fas fa-star"></i>
+        <div>XP</div>
+        <div class="stat-value">{{ user.experience }}</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-glow" onclick="location.href='/game-room'">
+        <i class="fas fa-list"></i> Room List
+      </button>
+      <button class="btn-glow" onclick="location.href='/rooms/create'">
+        <i class="fas fa-plus-circle"></i> Create Room
+      </button>
+       <button class="btn-glow" onclick="location.href='/guilds'">
+        <i class="fas fa-plus-circle"></i> Explore Guilds
+      </button>
+    </div>
+  </div>
+
+
+  <div class="panel">
+    <h2>Main Area</h2>
+    <p>Customize this section to show live rooms, upcoming events, news, friends, or guild messages.</p>
+  </div>
+</div>
+{% endblock %}

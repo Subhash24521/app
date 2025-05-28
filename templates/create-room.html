@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Create Room - HoloZone{% endblock %}
+
+{% block content %}
+<style>
+  /* Basic styling for create room form */
+  form {
+    max-width: 400px;
+    margin: 3rem auto;
+    background: linear-gradient(145deg, #0e0e20, #1e1e38);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    color: #e4f0fb;
+    font-family: 'Orbitron', 'Segoe UI', sans-serif;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.8rem;
+  }
+
+  input, textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid #00ffe1;
+    background: #12122a;
+    color: #e4f0fb;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  button {
+    margin-top: 1rem;
+    padding: 0.8rem 1.5rem;
+    background: #00ffe1;
+    color: #010409;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    box-shadow: 0 0 20px #00ffe1;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #00ccb9;
+  }
+</style>
+<h1>Create a New Room</h1>
+
+{% if error %}
+  <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+<form method="post" action="/rooms/create">
+  <label for="name">Room Name</label>
+  <input type="text" id="name" name="name" required maxlength="50">
+
+  <label for="description">Description (optional)</label>
+  <textarea id="description" name="description" rows="4" maxlength="200"></textarea>
+
+  <button type="submit">Create Room</button>
+</form>
+{% endblock %}

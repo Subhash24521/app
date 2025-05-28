@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Game Room - Neon Hub{% endblock %}
+
+{% block content %}
+<style>
+  .game-room {
+    max-width: 900px;
+    margin: 3rem auto;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    color: #e6faff;
+  }
+
+  .game-room h1 {
+    font-size: 2.8rem;
+    margin-bottom: 2rem;
+    color: #00ffe0;
+    text-shadow: 0 0 10px #00ffe0;
+  }
+
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.8rem;
+    justify-items: center;
+  }
+
+  .game-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 18px;
+    padding: 1.5rem 1rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #00ffe0;
+    text-decoration: none;
+    box-shadow: 0 0 16px #00ffe0a8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .game-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 25px #00ffe0, 0 0 30px #ff00e0;
+  }
+
+
+</style>
+
+<section class="game-room">
+  <h1>🎮 Choose Your Arena</h1>
+  <div class="game-grid">
+    <a href="/games/chess" class="game-card neon-glow">♟️ Chess</a>
+    <a href="/games/piano" class="game-card neon-glow">🎹 Piano</a>
+    <a href="/games/ludo" class="game-card neon-glow">🎲 Ludo</a>
+    <a href="/games/carrom" class="game-card neon-glow">🪙 Carrom</a>
+    <a href="/games/snake-ladder" class="game-card neon-glow">🐍 Snake & Ladder</a>
+    <a href="/game-chat/{{ room.id }}/chat" class="game-card neon-glow">💬 Chat: {{ room.name }}</a>
+  
+  </div>
+</section>
+
+{% endblock %}

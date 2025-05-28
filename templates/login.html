@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<style>
+    /* === Login Page Styles === */
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 2rem;
+}
+
+.login-card {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 100%;
+    color: #f0f0f0;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.1);
+    text-align: center;
+}
+
+.login-card h2 {
+    margin-bottom: 1.5rem;
+    color: #00ffe1;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+    border: none;
+    border-radius: 8px;
+    background-color: #1a1a1a;
+    color: #fff;
+    font-size: 1rem;
+    box-shadow: inset 0 0 5px rgba(0, 255, 255, 0.1);
+    outline: none;
+}
+
+.login-form input::placeholder {
+    color: #bbb;
+}
+
+.login-form button {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #00ffe1;
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login-form button:hover {
+    background-color: #00dddd;
+    box-shadow: 0 0 15px #00ffe1;
+}
+
+.login-footer {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.login-footer a {
+    color: #00ffe1;
+    text-decoration: none;
+}
+
+.error {
+    background: rgba(255, 0, 0, 0.2);
+    color: #ff8080;
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+}
+
+</style>
+<div class="login-wrapper">
+    <div class="login-card">
+        <h2>🔐 Login</h2>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <form method="post" class="login-form">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p class="login-footer">Don't have an account? <a href="/register">Register</a></p>
+    </div>
+</div>
+{% endblock %}

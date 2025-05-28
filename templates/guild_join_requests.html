@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Join Guild - {{ guild.name }}</title>
+</head>
+<body>
+  <h1>Guild: {{ guild.name }}</h1>
+  <p>Description: {{ guild.description or "No description" }}</p>
+
+  <p>Hello, {{ user.username }}!</p>
+
+  <form method="post" action="/guilds/{{ guild.id }}/request_join">
+    <button type="submit">Request to Join Guild</button>
+  </form>
+
+  <p><a href="/guilds">Back to Guilds</a></p>
+</body>
+</html>

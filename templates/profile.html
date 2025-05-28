@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Neon Game Hub{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@500&display=swap');
+
+  .profile-container {
+    max-width: 700px;
+    margin: 3rem auto;
+    background: linear-gradient(135deg, #0f0f1a 0%, #12121f 60%, #0f0f1a 100%);
+    border-radius: 24px;
+    padding: 2.5rem 3rem;
+    box-shadow:
+      0 0 12px #00ffe1,
+      inset 0 0 40px #00ffe1;
+    color: #d0f9ff;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  /* Avatar on left */
+  .profile-avatar {
+    flex-shrink: 0;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    border: 4px solid #00ffe1;
+    object-fit: cover;
+    box-shadow:
+      0 0 20px #00ffe1,
+      inset 0 0 12px #00ffe1;
+    transition: transform 0.3s ease;
+  }
+  .profile-avatar:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow:
+      0 0 30px #00ffe1,
+      inset 0 0 16px #00ffe1;
+  }
+
+  /* Details on right */
+  .profile-details {
+    flex-grow: 1;
+    text-align: left;
+  }
+
+  .profile-name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 2.8rem;
+    color: #00ffe1;
+    text-shadow:
+      0 0 6px #00ffe1,
+      0 0 12px #00ffe1,
+      0 0 24px #00ffe1;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+
+  .profile-username {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 500;
+    font-size: 1.2rem;
+    color: #55c8d6;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.8rem;
+    text-transform: lowercase;
+  }
+
+  .profile-bio {
+    font-size: 1.1rem;
+    font-style: italic;
+    color: #a6e9ff;
+    margin-bottom: 3rem;
+    line-height: 1.4;
+    min-height: 4rem;
+  }
+
+  .edit-button {
+    display: inline-block;
+    padding: 14px 40px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    color: #0f0f1a;
+    background: linear-gradient(135deg, #00ffe1, #ff00e0);
+    text-decoration: none;
+    box-shadow:
+      0 0 12px #00ffe1,
+      0 0 20px #ff00e0;
+    transition: background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+    user-select: none;
+  }
+  .edit-button:hover {
+    background: linear-gradient(135deg, #ff00e0, #00ffe1);
+    color: #fff;
+    box-shadow:
+      0 0 22px #ff00e0,
+      0 0 30px #00ffe1;
+  }
+
+  /* Responsive for smaller screens */
+  @media (max-width: 600px) {
+    .profile-container {
+      flex-direction: column;
+      padding: 2rem 1.5rem;
+      max-width: 90vw;
+    }
+    .profile-avatar {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 1.8rem;
+    }
+    .profile-details {
+      text-align: center;
+    }
+    .profile-bio {
+      min-height: auto;
+      margin-bottom: 2rem;
+    }
+  }
+</style>
+
+<div class="profile-container">
+  <img src="{{ user.avatar_url or '/static/default_avatar.png' }}" alt="User Avatar" class="profile-avatar" />
+  <div class="profile-details">
+    <h2 class="profile-name">{{ user.full_name or user.username }}</h2>
+    <p class="profile-username">@{{ user.username }}</p>
+    <p class="profile-bio">{{ user.bio or "This user hasn't written a bio yet." }}</p>
+    <a href="/profile/edit" class="edit-button" aria-label="Edit Profile">Edit Profile</a>
+  </div>
+</div>
+{% endblock %}

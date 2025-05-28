@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Neon Game Hub{% endblock %}</title>
+    <style>
+        /* NEON DARK THEME BASE */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #0f0f1a;
+    color: #e5e5e5;
+    font-family: 'Orbitron', 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER */
+.neon-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: #1a1a2e;
+    box-shadow: 0 0 10px #0ff;
+}
+
+.logo {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #00ffe1;
+}
+
+nav a, .welcome {
+    margin-left: 1.2rem;
+    text-decoration: none;
+    color: #ccc;
+    font-weight: 600;
+    transition: color 0.3s;
+}
+
+nav a:hover, .active {
+    color: #00ffe1;
+}
+
+.logout {
+    color: #ff4e4e;
+}
+
+/* MAIN */
+main {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* GAME ROOM */
+.game-room h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    color: #00ffe1;
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    padding: 0 2rem;
+}
+
+.game-card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.neon-glow {
+    border: 2px solid #00ffe1;
+    box-shadow: 0 0 15px #00ffe1;
+}
+
+.neon-glow:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 0 25px #00ffe1, 0 0 35px #00ffe1;
+}
+
+/* FOOTER */
+footer {
+    background: #1a1a2e;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+    </style>
+</head>
+<body>
+    <header class="neon-navbar">
+        <div class="logo">🕹️ Neon Game Hub</div>
+        <nav>
+            {% if user %}
+                <span class="welcome">Hi, {{ user.username }}</span>
+                <a href="/dashboard">Dashboard</a>
+                 <a href="/profile" class="active">Profile</a>
+                <a href="/game-room" class="active">Game Room</a>
+                <a href="/logout" class="logout">Logout</a>
+
+            {% else %}
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+   
+</body>
+</html>

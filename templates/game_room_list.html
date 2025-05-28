@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Game Rooms{% endblock %}
+
+{% block content %}
+<style>
+  body {
+    background: #0e0e1a;
+    font-family: 'Orbitron', sans-serif;
+    color: #e6faff;
+    margin: 0;
+    padding: 2rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+    color: #00ffe0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    text-shadow: 0 0 8px #00ffe0;
+  }
+
+  .rooms-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.8rem;
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+  }
+
+  .room-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 18px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 0 16px #00ffe0a8;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .room-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 0 25px #00ffe0, 0 0 30px #ff00e0;
+  }
+
+  .room-icon {
+    font-size: 2.5rem;
+    color: #00ffe0;
+    flex-shrink: 0;
+    text-shadow: 0 0 10px #00ffe0;
+  }
+
+  .room-name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #e6faff;
+    text-decoration: none;
+    flex-grow: 1;
+    user-select: none;
+  }
+
+  .room-link {
+    color: inherit;
+    text-decoration: none;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .room-link:hover {
+    text-decoration: underline;
+  }
+
+  .no-rooms {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #9caec2;
+    margin-top: 3rem;
+  }
+
+  .back-link {
+    display: block;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    color: #00ffe0;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border: 1.5px solid #00ffe0;
+    border-radius: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    user-select: none;
+  }
+
+  .back-link:hover {
+    background-color: #00ffe0;
+    color: #0e0e1a;
+    text-decoration: none;
+    box-shadow: 0 0 15px #00ffe0;
+  }
+</style>
+
+<h2>Available Game Rooms</h2>
+
+{% if rooms %}
+  <div class="rooms-container">
+    {% for room in rooms %}
+      <a href="/game-room/{{ room.id }}" class="room-link" aria-label="Enter room {{ room.name }}">
+        <div class="room-card">
+          <div class="room-icon">🎮</div>
+          <div class="room-name">{{ room.name }}</div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="no-rooms">No game rooms available. Check back later or create one!</p>
+{% endif %}
+
+<a href="/dashboard" class="back-link">← Back to Dashboard</a>
+
+{% endblock %}
