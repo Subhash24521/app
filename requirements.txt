@@ -142,7 +142,7 @@ pendulum==3.0.0
 pika==1.3.2
 pillow==11.1.0
 pipx==1.7.1
-pip install uvicorn
+uvicorn
 pip freeze > requirements.txt
 platformdirs==4.3.7
 pluggy==1.5.0
