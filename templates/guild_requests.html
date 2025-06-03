@@ -1,25 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Join Requests</title>
+  <title>Pending Join Requests – {{ guild.name }}</title>
+  <!-- your CSS here -->
 </head>
 <body>
-  <h1>Join Requests for Guild {{ guild_id }}</h1>
+  <h1>Join Requests for {{ guild.name }}</h1>
+  {% if requests %}
+    <ul>
+      {% for r in requests %}
+        <li>
+          {{ r.username }}
+          <form method="post" action="/guilds/{{ guild.id }}/requests/{{ r.user_id }}/approve" style="display:inline;">
+            <button>Approve</button>
+          </form>
+          <form method="post" action="/guilds/{{ guild.id }}/requests/{{ r.user_id }}/reject" style="display:inline;">
+            <button class="danger">Reject</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No pending join requests.</p>
+  {% endif %}
 
-  <ul>
-    {% for req in requests %}
-      <li>
-        {{ req.user.username }}
-        <form style="display:inline" method="post" action="/guilds/{{ guild_id }}/requests/{{ req.user.id }}/approve">
-          <button type="submit">Approve</button>
-        </form>
-      </li>
-    {% else %}
-      <li>No pending join requests</li>
-    {% endfor %}
-  </ul>
-
-  <p><a href="/guilds/{{ guild_id }}">Back to Guild</a></p>
+  <a href="/guilds/{{ guild.id }}">
+    ← Back to Guild Detail
+  </a>
 </body>
 </html>

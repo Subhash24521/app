@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Perfect Piano Web with Instruments & Songs</title>
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+    #piano {
+      position: relative;
+      user-select: none;
+      display: flex;
+      border-radius: 6px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      margin-bottom: 1rem;
+    }
+    /* White keys */
+    .key.white {
+      width: 60px;
+      height: 250px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 0 0 8px 8px;
+      position: relative;
+      z-index: 1;
+      box-shadow: inset 0 -4px 8px #ddd;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      font-weight: 600;
+      color: #333;
+      user-select: none;
+      transition: background 0.1s;
+      margin-right: -1px;
+    }
+    .key.white.active {
+      background: #f4e842;
+      box-shadow: 0 0 12px #f4e842;
+    }
+    /* Black keys */
+    .key.black {
+      width: 40px;
+      height: 140px;
+      background: black;
+      border-radius: 0 0 4px 4px;
+      position: absolute;
+      top: 0;
+      z-index: 2;
+      margin-left: -20px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.9);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.1s;
+      color: white;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 6px;
+    }
+    .key.black.active {
+      background: #f4e842;
+      color: #333;
+      box-shadow: 0 0 12px #f4e842;
+    }
+    /* Position black keys */
+    .key.black.Cs { left: 45px; }
+    .key.black.Ds { left: 105px; }
+    .key.black.Fs { left: 225px; }
+    .key.black.Gs { left: 285px; }
+    .key.black.As { left: 345px; }
+
+    /* Controls */
+    #controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    label {
+      font-size: 0.9rem;
+      user-select: none;
+    }
+    input[type=range], input[type=number], select {
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: none;
+      outline: none;
+      margin-left: 0.3rem;
+    }
+    button {
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: none;
+      background: #f4e842;
+      color: #222;
+      font-weight: 700;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #e0d830;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      #piano {
+        transform: scale(0.8);
+        transform-origin: center bottom;
+      }
+    }
+    @media (max-width: 400px) {
+      #piano {
+        transform: scale(0.6);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎹 Perfect Piano Web + Instruments & Songs</h1>
+
+  <div id="controls">
+    <label>
+      Instrument:
+      <select id="instrumentSelect">
+        <option value="sine">Piano (Sine)</option>
+        <option value="square">Guitar (Square)</option>
+        <option value="triangle">Bass (Triangle)</option>
+        <option value="sawtooth">Synth (Sawtooth)</option>
+      </select>
+    </label>
+    <label>
+      Volume:
+      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5" />
+    </label>
+    <label>
+      Octave Shift:
+      <input type="number" id="octaveShift" min="-2" max="2" value="0" style="width: 50px" />
+    </label>
+    <button id="playSongBtn">Play Song</button>
+    <button id="stopSongBtn" disabled>Stop Song</button>
+    <label>
+      Select Song:
+     <select id="songSelect">
+  <option value="twinkle">Twinkle Twinkle Little Star</option>
+  <option value="bassline">Simple Bassline Groove</option>
+  <option value="birthday">Happy Birthday</option>
+</select>
+
+    </label>
+  </div>
+
+  <div id="piano"></div>
+
+  <footer>Created by ChatGPT &nbsp; | &nbsp; Use keyboard keys A-L, W-O to play notes</footer>
+
+  <script>
+    (() => {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      let volume = 0.5;
+      let octaveShift = 0;
+      let instrument = 'sine'; // default oscillator type
+
+      const piano = document.getElementById('piano');
+      const volumeSlider = document.getElementById('volume');
+      const octaveInput = document.getElementById('octaveShift');
+      const instrumentSelect = document.getElementById('instrumentSelect');
+      const playSongBtn = document.getElementById('playSongBtn');
+      const stopSongBtn = document.getElementById('stopSongBtn');
+      const songSelect = document.getElementById('songSelect');
+
+      // Map keyboard keys to notes in one octave (C4=middle C)
+      const keyboardMap = {
+        KeyA: 'C',
+        KeyW: 'Cs',
+        KeyS: 'D',
+        KeyE: 'Ds',
+        KeyD: 'E',
+        KeyF: 'F',
+        KeyT: 'Fs',
+        KeyG: 'G',
+        KeyY: 'Gs',
+        KeyH: 'A',
+        KeyU: 'As',
+        KeyJ: 'B',
+        KeyK: 'C',
+        KeyO: 'Cs',
+        KeyL: 'D',
+        KeyP: 'Ds',
+        Semicolon: 'E'
+      };
+
+      const octaves = [3, 4, 5];
+
+      const notes = [
+        { note: 'C', keyType: 'white' },
+        { note: 'Cs', keyType: 'black' },
+        { note: 'D', keyType: 'white' },
+        { note: 'Ds', keyType: 'black' },
+        { note: 'E', keyType: 'white' },
+        { note: 'F', keyType: 'white' },
+        { note: 'Fs', keyType: 'black' },
+        { note: 'G', keyType: 'white' },
+        { note: 'Gs', keyType: 'black' },
+        { note: 'A', keyType: 'white' },
+        { note: 'As', keyType: 'black' },
+        { note: 'B', keyType: 'white' }
+      ];
+
+      function frequencyFromNote(note, octave) {
+        const noteOrder = ['C', 'Cs', 'D', 'Ds', 'E', 'F', 'Fs', 'G', 'Gs', 'A', 'As', 'B'];
+        const A4Index = noteOrder.indexOf('A') + 4 * 12;
+        const noteIndex = noteOrder.indexOf(note) + octave * 12;
+        const semitonesFromA4 = noteIndex - A4Index;
+        return 440 * Math.pow(2, semitonesFromA4 / 12);
+      }
+
+      // Play note with given instrument waveform
+      function playNote(note, octave) {
+        const freq = frequencyFromNote(note, octave + octaveShift);
+        if (!freq) return;
+
+        const osc = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        osc.type = instrument;
+        osc.frequency.value = freq;
+        gainNode.gain.value = volume;
+
+        osc.connect(gainNode).connect(audioContext.destination);
+
+        osc.start();
+        gainNode.gain.setTargetAtTime(0, audioContext.currentTime + 0.3, 0.1);
+        osc.stop(audioContext.currentTime + 1);
+      }
+
+      // Create piano keys
+      function createKey(note, octave, indexInOctave) {
+        const key = document.createElement('div');
+        key.classList.add('key');
+        key.classList.add(note.keyType);
+        key.dataset.note = note.note;
+        key.dataset.octave = octave;
+        key.id = `key-${note.note}${octave}`;
+        key.textContent = note.note.replace('s', '#');
+
+        if (note.keyType === 'black') {
+          key.classList.add(note.note);
+          const posMap = {
+            Cs: 0,
+            Ds: 1,
+            Fs: 3,
+            Gs: 4,
+            As: 5
+          };
+          const octaveOffset = (octaves.indexOf(octave)) * 7 * 60;
+          const leftPos = 45 + posMap[note.note] * 60 + octaveOffset;
+          key.style.left = leftPos + 'px';
+        }
+
+        key.addEventListener('mousedown', () => {
+          playNote(note.note, octave);
+          key.classList.add('active');
+        });
+        key.addEventListener('mouseup', () => {
+          key.classList.remove('active');
+        });
+        key.addEventListener('mouseleave', () => {
+          key.classList.remove('active');
+        });
+
+        return key;
+      }
+
+      function buildPiano() {
+        piano.innerHTML = '';
+        const whiteKeysContainer = document.createElement('div');
+        whiteKeysContainer.style.display = 'flex';
+        whiteKeysContainer.style.position = 'relative';
+        whiteKeysContainer.style.zIndex = '1';
+
+        octaves.forEach(octave => {
+          notes.forEach((note, idx) => {
+            if (note.keyType === 'white') {
+              const key = createKey(note, octave, idx);
+              whiteKeysContainer.appendChild(key);
+            }
+          });
+        });
+
+        piano.appendChild(whiteKeysContainer);
+
+        octaves.forEach(octave => {
+          notes.forEach(note => {
+            if (note.keyType === 'black') {
+              const key = createKey(note, octave);
+              piano.appendChild(key);
+            }
+          });
+        });
+      }
+
+      buildPiano();
+
+      // Keyboard input
+      const activeKeys = new Set();
+
+      window.addEventListener('keydown', e => {
+        if (e.repeat) return;
+        const note = keyboardMap[e.code];
+        if (!note) return;
+        activeKeys.add(e.code);
+
+        // Default octave mapping for keys:
+        // Lower range keys: octave 4, higher keys 5 for some keys like K,L,O,P,;
+        let octave = 4;
+        switch (e.code) {
+          case 'KeyK':
+          case 'KeyL':
+          case 'KeyO':
+          case 'KeyP':
+          case 'Semicolon':
+            octave = 5;
+            break;
+          default:
+            octave = 4;
+        }
+
+        playNote(note, octave);
+        const keyEl = document.getElementById(`key-${note}${octave}`);
+        if (keyEl) keyEl.classList.add('active');
+      });
+
+      window.addEventListener('keyup', e => {
+        const note = keyboardMap[e.code];
+        if (!note) return;
+        activeKeys.delete(e.code);
+
+        let octave = 4;
+        switch (e.code) {
+          case 'KeyK':
+          case 'KeyL':
+          case 'KeyO':
+          case 'KeyP':
+          case 'Semicolon':
+            octave = 5;
+            break;
+          default:
+            octave = 4;
+        }
+        const keyEl = document.getElementById(`key-${note}${octave}`);
+        if (keyEl) keyEl.classList.remove('active');
+      });
+
+      volumeSlider.addEventListener('input', e => {
+        volume = parseFloat(e.target.value);
+      });
+
+      octaveInput.addEventListener('change', e => {
+        const val = parseInt(e.target.value);
+        if (val >= -2 && val <= 2) {
+          octaveShift = val;
+        } else {
+          e.target.value = octaveShift;
+        }
+      });
+
+      instrumentSelect.addEventListener('change', e => {
+        instrument = e.target.value;
+      });
+
+      // === Demo songs ===
+      // Format: array of {note, octave, duration(ms), instrument} or {rest:true, duration(ms)}
+
+      const songs = {
+  twinkle: [
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'G', octave: 4, duration: 400 },
+    { note: 'G', octave: 4, duration: 400 },
+    { note: 'A', octave: 4, duration: 400 },
+    { note: 'A', octave: 4, duration: 400 },
+    { note: 'G', octave: 4, duration: 800 },
+    { rest: true, duration: 200 },
+
+    { note: 'F', octave: 4, duration: 400 },
+    { note: 'F', octave: 4, duration: 400 },
+    { note: 'E', octave: 4, duration: 400 },
+    { note: 'E', octave: 4, duration: 400 },
+    { note: 'D', octave: 4, duration: 400 },
+    { note: 'D', octave: 4, duration: 400 },
+    { note: 'C', octave: 4, duration: 800 }
+  ],
+  bassline: [
+    { note: 'C', octave: 3, duration: 500 },
+    { rest: true, duration: 250 },
+    { note: 'E', octave: 3, duration: 500 },
+    { rest: true, duration: 250 },
+    { note: 'G', octave: 3, duration: 500 },
+    { rest: true, duration: 250 },
+    { note: 'Bb', octave: 3, duration: 500 }, // Bb not on keyboard but no problem, will skip
+    { rest: true, duration: 500 },
+    { note: 'G', octave: 3, duration: 1000 }
+  ],
+  birthday: [
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'D', octave: 4, duration: 800 },
+    { note: 'C', octave: 4, duration: 800 },
+    { note: 'F', octave: 4, duration: 800 },
+    { note: 'E', octave: 4, duration: 1600 },
+
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'D', octave: 4, duration: 800 },
+    { note: 'C', octave: 4, duration: 800 },
+    { note: 'G', octave: 4, duration: 800 },
+    { note: 'F', octave: 4, duration: 1600 },
+
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'C', octave: 4, duration: 400 },
+    { note: 'C', octave: 5, duration: 800 },
+    { note: 'A', octave: 4, duration: 800 },
+    { note: 'F', octave: 4, duration: 800 },
+    { note: 'E', octave: 4, duration: 800 },
+    { note: 'D', octave: 4, duration: 800 },
+
+    { note: 'Bb', octave: 4, duration: 400 },
+    { Bb: 'Bb', octave: 4, duration: 400 },
+    { note: 'Bb', octave: 4, duration: 800 },
+    { note: 'A', octave: 4, duration: 800 },
+    { note: 'F', octave: 4, duration: 800 },
+    { note: 'G', octave: 4, duration: 800 },
+    { note: 'F', octave: 4, duration: 1600 }
+  ]
+};
+
+      // Helper to get freq for note with flats (Bb -> As)
+      function fixNoteName(note) {
+        if (note.length === 2 && note[1] === 'b') {
+          const flatToSharp = { 'Bb': 'As', 'Db': 'Cs', 'Eb': 'Ds', 'Gb': 'Fs', 'Ab': 'Gs' };
+          return flatToSharp[note] || note;
+        }
+        return note;
+      }
+
+      let songPlaying = false;
+      let songTimeouts = [];
+
+      function highlightKey(note, octave, on = true) {
+        const keyEl = document.getElementById(`key-${note}${octave}`);
+        if (keyEl) {
+          if (on) keyEl.classList.add('active');
+          else keyEl.classList.remove('active');
+        }
+      }
+
+      function playSong(songName) {
+        if (songPlaying) return;
+        songPlaying = true;
+        playSongBtn.disabled = true;
+        stopSongBtn.disabled = false;
+
+        const song = songs[songName];
+        if (!song) return;
+
+        let currentTime = 0;
+        song.forEach((noteObj, i) => {
+          const start = currentTime;
+          currentTime += noteObj.duration;
+
+          const note = noteObj.note ? fixNoteName(noteObj.note) : null;
+          const octave = noteObj.octave || 4;
+          const dur = noteObj.duration;
+
+          // Schedule note
+          if (noteObj.rest) {
+            // rest: do nothing
+          } else {
+            const timeoutIdStart = setTimeout(() => {
+              playNote(note, octave);
+              highlightKey(note, octave, true);
+            }, start);
+
+            const timeoutIdStop = setTimeout(() => {
+              highlightKey(note, octave, false);
+            }, start + dur);
+
+            songTimeouts.push(timeoutIdStart, timeoutIdStop);
+          }
+        });
+
+        // When song ends, re-enable play button
+        const endTimeout = setTimeout(() => {
+          songPlaying = false;
+          playSongBtn.disabled = false;
+          stopSongBtn.disabled = true;
+        }, currentTime + 100);
+
+        songTimeouts.push(endTimeout);
+      }
+
+      function stopSong() {
+        songTimeouts.forEach(t => clearTimeout(t));
+        songTimeouts = [];
+        songPlaying = false;
+        playSongBtn.disabled = false;
+        stopSongBtn.disabled = true;
+
+        // Remove all active highlights
+        document.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+      }
+
+      playSongBtn.addEventListener('click', () => {
+        const selectedSong = songSelect.value;
+        playSong(selectedSong);
+      });
+
+      stopSongBtn.addEventListener('click', () => {
+        stopSong();
+      });
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Friends & Chat – GamerHub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #0e0e1a, #1c1c2c);
+      color: #e0e0f0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* ===== Container that holds Sidebar + Chat Panel ===== */
+    .main-container {
+      display: flex;
+      width: 100%;
+      max-width: 1024px;
+      height: 80vh;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.6),
+        0 0 40px rgba(80, 120, 255, 0.4);
+      background: #1e1e1e;
+    }
+
+    /* ================= Sidebar: Friends List ================= */
+    .sidebar {
+      width: 300px;
+      background: rgba(30, 30, 50, 0.95);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #333;
+    }
+    .sidebar-header {
+      padding: 20px 24px;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #4da6ff;
+      border-bottom: 1px solid #333;
+      user-select: none;
+    }
+    .friends-list {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    .friend-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      position: relative;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .friend-item:hover,
+    .friend-item.active {
+      background: #2a2a2a;
+    }
+    .friend-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4da6ff, #1b3a91);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #fff;
+      margin-right: 16px;
+      flex-shrink: 0;
+      box-shadow:
+        0 0 0 2px #121212,
+        0 0 6px #4da6ffaa;
+      user-select: none;
+    }
+    .friend-info {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+    .friend-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .friend-last {
+      font-size: 0.85rem;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .friend-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .friend-timestamp {
+      font-size: 0.75rem;
+      color: #666;
+    }
+    .unread-badge {
+      background: #4da6ff;
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+
+    /* ================= Chat Panel ================= */
+    .chat-panel {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      background: #181818;
+      position: relative;
+    }
+    .chat-header {
+      padding: 20px 24px;
+      font-weight: 700;
+      font-size: 1.4rem;
+      border-bottom: 1px solid #333;
+      color: #4da6ff;
+      user-select: none;
+      text-shadow: 0 0 6px #4da6ff99;
+      min-height: 60px;
+    }
+    .chat-messages {
+      flex-grow: 1;
+      padding: 20px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: #4da6ff44 transparent;
+    }
+    .chat-messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background-color: #4da6ff44;
+      border-radius: 10px;
+    }
+    .message {
+      max-width: 70%;
+      padding: 14px 20px;
+      border-radius: 20px;
+      font-size: 1rem;
+      line-height: 1.4;
+      position: relative;
+      word-wrap: break-word;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      user-select: text;
+    }
+    .message.sent {
+      background: linear-gradient(135deg, #4da6ff, #1b3a91);
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: 6px;
+    }
+    .message.received {
+      background: #2c2c2c;
+      color: #ddd;
+      align-self: flex-start;
+      border-bottom-left-radius: 6px;
+    }
+    .message .timestamp {
+      font-size: 0.75rem;
+      opacity: 0.5;
+      position: absolute;
+      bottom: 6px;
+      right: 12px;
+      font-family: monospace;
+      user-select: none;
+    }
+
+    /* ================= Chat Input ================= */
+    .chat-input-container {
+      background: #181818;
+      padding: 16px 24px;
+      border-top: 1px solid #333;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      position: sticky;
+      bottom: 0;
+    }
+    .chat-textarea {
+      flex-grow: 1;
+      resize: none;
+      height: 48px;
+      border-radius: 24px;
+      border: none;
+      padding: 12px 16px;
+      font-size: 1rem;
+      font-family: 'Outfit', sans-serif;
+      background: #222;
+      color: #ddd;
+      box-shadow: inset 0 0 6px #000000aa;
+      outline: none;
+      transition: background-color 0.3s ease;
+    }
+    .chat-textarea::placeholder {
+      color: #777;
+    }
+    .chat-textarea:focus {
+      background: #2c2c2c;
+      box-shadow: inset 0 0 12px #4da6ffbb;
+    }
+    .send-button {
+      background: #4da6ff;
+      border: none;
+      border-radius: 24px;
+      padding: 0 24px;
+      height: 48px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 0 12px #4da6ffaa;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .send-button:disabled {
+      background: #3a6ec8;
+      cursor: default;
+      box-shadow: none;
+    }
+    .send-button:hover:not(:disabled) {
+      background: #3973e6;
+      box-shadow: 0 0 16px #64a0ffcc;
+    }
+
+    /* ======== Placeholder when no friend selected ======== */
+    .no-chat {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #777;
+      font-style: italic;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 900px) {
+      .main-container {
+        flex-direction: column;
+        height: auto;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+      }
+      .chat-panel {
+        height: 400px; /* or auto */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+
+    <!-- ================= Sidebar: Friends List ================= -->
+    <aside class="sidebar" aria-label="Friends List">
+      <div class="sidebar-header">Your Friends</div>
+      <div class="friends-list">
+        {% for f in friends %}
+          {# Build initials for avatar, e.g. "AB" from "Alice Brown" #}
+          {% set name_parts = f.username.split(" ") %}
+          {% if name_parts|length >= 2 %}
+            {% set initials = name_parts[0][0] + name_parts[1][0] %}
+          {% else %}
+            {% set initials = f.username[:2] %}
+          {% endif %}
+
+          <a href="/friends/chat/{{ f.id }}">
+            <div
+              class="friend-item {% if selected_friend and f.id == selected_friend.id %}active{% endif %}"
+            >
+              <div class="friend-avatar">{{ initials.upper() }}</div>
+              <div class="friend-info">
+                <div class="friend-name">{{ f.username }}</div>
+                {# Optionally show last message preview (if you want) #}
+                {% comment %}
+                <div class="friend-last">
+                  {{ "Last message preview…" }}
+                </div>
+                {% endcomment %}
+              </div>
+              <div class="friend-meta">
+                {# If you track unread counts, show badge #}
+                {# <div class="unread-badge">2</div> #}
+              </div>
+            </div>
+          </a>
+        {% else %}
+          <div style="padding: 20px; color: #777; text-align: center; font-style: italic;">
+            No friends to show.
+          </div>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <!-- ================= Chat Panel ================= -->
+    <section class="chat-panel" aria-live="polite">
+      {% if not selected_friend %}
+        <div class="no-chat">Select a friend to start chatting.</div>
+      {% else %}
+        <div class="chat-header">Chat with {{ selected_friend.username }}</div>
+
+        <div class="chat-messages">
+          {% if convo %}
+            {% for m in convo %}
+              <div
+                class="message {% if m.sender_id == current_user_id %}sent{% else %}received{% endif %}"
+              >
+                {{ m.text }}
+                <div class="timestamp">{{ m.timestamp }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="no-chat">No messages yet. Send the first one!</div>
+          {% endif %}
+        </div>
+
+        <!-- Chat Input Form: posts to same URL -->
+        <form method="post" action="/friends/chat/{{ selected_friend.id }}">
+          <div class="chat-input-container">
+            <textarea
+              name="content"
+              class="chat-textarea"
+              rows="1"
+              placeholder="Type a message…"
+              required
+            ></textarea>
+            <button type="submit" class="send-button">Send</button>
+          </div>
+        </form>
+      {% endif %}
+    </section>
+  </div>
+</body>
+</html>

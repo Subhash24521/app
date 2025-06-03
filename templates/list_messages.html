@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GamerHub Chat</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #0f0f1f;
+      color: #ddd;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ========== SIDEBAR ========== */
+    .sidebar {
+      width: 240px;
+      background: #1a1a2e;
+      border-right: 1px solid #2a2a46;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      color: #4a63d1;
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+    }
+
+    .friend {
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background: #2a2a46;
+      cursor: pointer;
+      font-weight: 600;
+      color: #8ab4f8;
+      transition: background 0.2s ease;
+      text-decoration: none;
+      display: block;
+    }
+
+    .friend:hover,
+    .friend.active {
+      background: #4a63d1;
+      color: white;
+    }
+
+    /* ========== MAIN CHAT AREA ========== */
+    .chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px;
+      background: #131323;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 60%;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 1rem;
+      line-height: 1.4;
+      box-shadow: 0 0 6px #00000044;
+      word-wrap: break-word;
+    }
+
+    .sent {
+      align-self: flex-end;
+      background: #4a63d1;
+      color: white;
+    }
+
+    .received {
+      align-self: flex-start;
+      background: #2a2a46;
+      color: #ddd;
+    }
+
+    /* ========== MESSAGE FORM ========== */
+    .chat form {
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat textarea {
+      flex: 1;
+      resize: none;
+      padding: 12px 15px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      background: #2a2a46;
+      color: #ddd;
+    }
+
+    .chat textarea:focus {
+      outline: none;
+      box-shadow: 0 0 10px #4a63d1aa;
+    }
+
+    .chat button {
+      background: #4a63d1;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .chat button:hover {
+      background: #3754a3;
+    }
+
+    /* ========== PLACEHOLDER ========== */
+    .placeholder {
+      text-align: center;
+      color: #777;
+      font-style: italic;
+      margin-top: 50px;
+    }
+
+    /* RESPONSIVE: hide sidebar on narrow screens */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ======================== SIDEBAR ======================== -->
+  <aside class="sidebar">
+    <h2>Chats</h2>
+    {% for u in users %}
+      <a href="/private-messages/?friend_id={{ u.id }}"
+         class="friend {% if selected_user and selected_user.id == u.id %}active{% endif %}">
+        {{ u.username }}
+      </a>
+    {% endfor %}
+    {% if not users %}
+      <p style="color:#777; font-style:italic;">You have no friends yet.</p>
+    {% endif %}
+  </aside>
+
+  <!-- ======================== MAIN CHAT ======================== -->
+  <main class="chat" role="main" aria-label="Chat conversation">
+    {% if selected_user %}
+      <!-- Conversation with selected_user -->
+      <div class="messages">
+        {% for msg in messages %}
+          <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+            {{ msg.content }}
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Message sending form -->
+      <form method="POST" action="/private-messages/chat/{{ selected_user.id }}">
+        <textarea name="content" rows="2" required placeholder="Type a message..."></textarea>
+        <button type="submit">Send</button>
+      </form>
+
+    {% else %}
+      <!-- Placeholder when no friend is selected -->
+      <div class="placeholder">
+        Select a friend on the left to start chatting.
+      </div>
+    {% endif %}
+  </main>
+</body>
+</html>

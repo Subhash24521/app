@@ -1,120 +1,95 @@
-{% extends "base.html" %}
+<!-- templates/chat_room.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Room: {{ room.name }}</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #1b1b2f;
+      color: #eee;
+      padding: 20px;
+    }
+    .chat-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .message {
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: #2a2a3f;
+      border-radius: 6px;
+    }
+    .message .meta {
+      font-size: 0.85rem;
+      color: #bbb;
+      margin-bottom: 4px;
+    }
+    .message .content {
+      font-size: 1rem;
+    }
+    form {
+      margin-top: 20px;
+      display: flex;
+      gap: 8px;
+    }
+    form input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 4px;
+    }
+    form button {
+      padding: 8px 16px;
+      background: #4a63d1;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    form button:hover {
+      background: #3a50b0;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <h1>Room: {{ room.name }}</h1>
+    <p>Created at: {{ room.created_at.strftime("%Y-%m-%d %H:%M UTC") }}</p>
+    <hr />
 
-{% block content %}
-<style>
-  .chat-container {
-    max-width: 700px;
-    margin: 3rem auto;
-    background: #1b1c2e;
-    padding: 2rem;
-    border-radius: 18px;
-    box-shadow: 0 0 20px #00ffe1aa;
-    color: #e0f7fa;
-    font-family: 'Orbitron', sans-serif;
-  }
-
-  .chat-container h2 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    text-align: center;
-    color: #00ffe1;
-    text-shadow: 0 0 8px #00ffe1;
-  }
-
-  .chat-box {
-    max-height: 400px;
-    overflow-y: auto;
-    background: #121226;
-    border: 2px solid #00ffe1;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 10px;
-    box-shadow: inset 0 0 10px #00ffe1aa;
-  }
-
-  .chat-box p {
-    margin-bottom: 1rem;
-  }
-
-  .chat-box strong {
-    color: #00ffe1;
-  }
-
-  .chat-box small {
-    color: #888;
-    font-size: 0.85rem;
-  }
-
-  form textarea {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    border-radius: 10px;
-    background: #131726;
-    color: #e0f7fa;
-    border: 2px solid transparent;
-    font-size: 1rem;
-    resize: none;
-    transition: border-color 0.3s ease;
-  }
-
-  form textarea:focus {
-    border-color: #00ffe1;
-    outline: none;
-    box-shadow: 0 0 10px #00ffe1aa;
-  }
-
-  form button {
-    margin-top: 0.8rem;
-    background: linear-gradient(90deg, #00ffe1, #00ccff);
-    border: none;
-    padding: 0.7rem 1.5rem;
-    border-radius: 20px;
-    font-weight: bold;
-    color: #000;
-    font-size: 1rem;
-    cursor: pointer;
-    box-shadow: 0 0 15px #00ffe1;
-    transition: all 0.3s ease;
-  }
-
-  form button:hover {
-    background: linear-gradient(90deg, #00ccff, #00ffe1);
-    color: #fff;
-  }
-
-  .back-link {
-    display: inline-block;
-    margin-top: 1.5rem;
-    color: #00ffe1;
-    font-weight: bold;
-    text-decoration: none;
-    transition: color 0.3s ease;
-  }
-
-  .back-link:hover {
-    color: #fff;
-    text-shadow: 0 0 10px #00ffe1;
-  }
-</style>
-
-<div class="chat-container">
-  <h2>💬 Chat Room: {{ room.name if room.name else room.id }}</h2>
-
-  <div class="chat-box">
-    {% for msg in messages %}
-      <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}
-        <small>({{ msg.timestamp.strftime("%Y-%m-%d %H:%M:%S") }})</small>
-      </p>
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="message">
+          <div class="meta">
+            <strong>{{ msg.sender.username }}</strong>
+            &middot; {{ msg.timestamp.strftime("%Y-%m-%d %H:%M UTC") }}
+          </div>
+          <div class="content">{{ msg.content }}</div>
+        </div>
+      {% endfor %}
     {% else %}
-      <p>No messages yet. Say hi!</p>
-    {% endfor %}
+      <p>No messages yet. Start the conversation!</p>
+    {% endif %}
+
+    <form action="/game-chat/{{ room.id }}/chat" method="post">
+      <input
+        name="content"
+        type="text"
+        autocomplete="off"
+        placeholder="Type your message..."
+        required
+      />
+      <button type="submit">Send</button>
+    </form>
+
+    <form action="/game-chat/{{ room.id }}/exit" method="post" style="margin-top: 16px;">
+      <button type="submit" style="background: #ff4d4d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+        Exit Room (delete my messages)
+      </button>
+    </form>
   </div>
-
-  <form method="post">
-    <textarea name="content" placeholder="Type your message..." rows="3"></textarea>
-    <button type="submit">Send</button>
-  </form>
-
-  <a href="/game-room" class="back-link">← Back to Game Room</a>
-</div>
-{% endblock %}
+</body>
+</html>

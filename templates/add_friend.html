@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add a Friend – GamerHub</title>
+  <style>
+    /* Minimal styling—add your own dark‐mode rules as desired */
+    body {
+      background: #1c1c2c;
+      color: #e0e0f0;
+      font-family: 'Outfit', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: rgba(40, 40, 60, 0.8);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(80, 120, 255, 0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #8ab4f8;
+      font-weight: 600;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    input[type="text"] {
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #2a2a3e;
+      color: #fff;
+      font-size: 1rem;
+    }
+    button {
+      padding: 10px 0;
+      background: #4a63d1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background: #3a50b0;
+    }
+    .error {
+      color: #ff4d4d;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+    .back-link {
+      margin-top: 16px;
+      text-align: center;
+    }
+    .back-link a {
+      color: #8ab4f8;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Add a Friend</h1>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form action="/friends/add" method="post">
+      <input
+        type="text"
+        name="friend_username"
+        placeholder="Enter username"
+        required
+      />
+      <button type="submit">Send Friend Request</button>
+    </form>
+
+    <div class="back-link">
+      <a href="/friends/list">← Back to Friends List</a>
+    </div>
+  </div>
+</body>
+</html>

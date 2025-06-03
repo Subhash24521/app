@@ -234,26 +234,125 @@ def view_join_requests(
     guild_id: int,
     request: Request,
     db: Session = Depends(get_db),
-    user: models.User = Depends(get_current_user_from_cookie),
+    current_user: models.User = Depends(get_current_user_from_cookie),
 ):
-    membership = db.query(models.GuildMember).filter_by(user_id=user.id, guild_id=guild_id).first()
+    # 1. Fetch the actual Guild instance
+    guild = db.query(models.Guild).filter(models.Guild.id == guild_id).first()
+    if not guild:
+        raise HTTPException(status_code=404, detail="Guild not found")
+
+    # 2. Verify the current user is the founder of this guild
+    membership = (
+        db.query(models.GuildMember)
+        .filter_by(user_id=current_user.id, guild_id=guild_id)
+        .first()
+    )
     if not membership or membership.role != "Founder":
         raise HTTPException(status_code=403, detail="Only the founder can view join requests")
 
-    requests = (
-        db.query(models.GuildJoinRequest)
-        .filter_by(guild_id=guild_id, status="pending")
-        .join(models.User)
+    # 3. Fetch pending join requests joined to the User table
+    pending_requests = (
+        db.query(models.GuildJoinRequest, models.User)
+        .join(models.User, models.User.id == models.GuildJoinRequest.user_id)
+        .filter(
+            models.GuildJoinRequest.guild_id == guild_id,
+            models.GuildJoinRequest.status == "pending"
+        )
         .all()
     )
+    # pending_requests is a list of (GuildJoinRequest, User) tuples
+
+    # 4. Build a simple list of dicts for the template
+    request_data = [
+        {
+            "request_id": req.id,
+            "user_id": usr.id,
+            "username": usr.username
+        }
+        for req, usr in pending_requests
+    ]
+
     return templates.TemplateResponse("guild_requests.html", {
         "request": request,
-        "requests": requests,
-        "user": user,
-        "guild_id": guild_id,
+        "guild": guild,
+        "current_user": current_user,
+        "requests": request_data,
     })
 
 
+
+
+
+
+@router.post("/guilds/{guild_id}/disband")
+def disband_guild(
+    guild_id: int,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user_from_cookie),
+):
+    guild = db.query(models.Guild).filter(models.Guild.id == guild_id).first()
+    if not guild:
+        raise HTTPException(status_code=404, detail="Guild not found")
+
+    if guild.created_by != user.id:
+        raise HTTPException(status_code=403, detail="Only the founder can disband the guild")
+
+    # Delete related data manually
+    db.query(models.GuildJoinRequest).filter_by(guild_id=guild_id).delete()
+    db.query(models.GuildMember).filter_by(guild_id=guild_id).delete()
+    db.query(models.GuildMessage).filter_by(guild_id=guild_id).delete()
+
+    db.delete(guild)
+    db.commit()
+
+    return RedirectResponse(url="/guilds", status_code=HTTP_303_SEE_OTHER)
+
+
+
+# 1. Promote / Demote endpoint (Founder only)
+@router.post("/guilds/{guild_id}/promote/{member_id}")
+def promote_guild_member(
+    guild_id: int,
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_cookie),
+):
+    # Fetch guild and verify existence
+    guild = db.query(models.Guild).filter(models.Guild.id == guild_id).first()
+    if not guild:
+        raise HTTPException(status_code=404, detail="Guild not found")
+
+    # Only founder can promote/demote
+    if guild.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the founder can promote/demote members")
+
+    # Fetch the GuildMember row for the target user
+    membership = (
+        db.query(models.GuildMember)
+        .filter_by(user_id=member_id, guild_id=guild_id)
+        .first()
+    )
+    if not membership:
+        raise HTTPException(status_code=404, detail="User is not a member of this guild")
+
+    # Founder cannot demote themself
+    if membership.user_id == guild.created_by:
+        raise HTTPException(status_code=400, detail="Creator cannot be demoted")
+
+    # Toggle between Member ⇄ Manager
+    if membership.role == "Member":
+        membership.role = "Manager"
+    elif membership.role == "Manager":
+        membership.role = "Member"
+    else:
+        # Should never happen for “Founder,” but just in case:
+        raise HTTPException(status_code=400, detail="Cannot change this user’s role")
+
+    db.commit()
+    return RedirectResponse(url=f"/guilds/{guild_id}", status_code=HTTP_303_SEE_OTHER)
+
+
+# 2. Approve join request (Founder or Manager)
 @router.post("/guilds/{guild_id}/requests/{user_id}/approve")
 def approve_request(
     guild_id: int,
@@ -261,33 +360,44 @@ def approve_request(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_cookie),
 ):
-    membership = db.query(models.GuildMember).filter_by(
-        user_id=current_user.id, guild_id=guild_id
-    ).first()
-    if not membership or membership.role != "Founder":
-        raise HTTPException(status_code=403, detail="Only the founder can approve requests")
+    # Fetch guild
+    guild = db.query(models.Guild).filter(models.Guild.id == guild_id).first()
+    if not guild:
+        raise HTTPException(status_code=404, detail="Guild not found")
 
-    approve_user_request(guild_id, user_id, db)
-    return RedirectResponse(f"/guilds/{guild_id}", status_code=HTTP_303_SEE_OTHER)
+    # Check caller’s membership and role
+    caller_membership = (
+        db.query(models.GuildMember)
+        .filter_by(user_id=current_user.id, guild_id=guild_id)
+        .first()
+    )
+    if not caller_membership or caller_membership.role not in ("Founder", "Manager"):
+        raise HTTPException(status_code=403, detail="Only a Founder or Manager can approve requests")
 
+    # Approve logic
+    pending = (
+        db.query(models.GuildJoinRequest)
+        .filter_by(guild_id=guild_id, user_id=user_id, status="pending")
+        .first()
+    )
+    if not pending:
+        raise HTTPException(status_code=404, detail="Join request not found")
 
-def approve_user_request(guild_id: int, user_id: int, db: Session):
+    # If member limit is a concern, enforce it here
     member_count = db.query(models.GuildMember).filter_by(guild_id=guild_id).count()
     if member_count >= 50:
         raise HTTPException(status_code=400, detail="Guild member limit reached")
 
-    request = db.query(models.GuildJoinRequest).filter_by(
-        guild_id=guild_id, user_id=user_id, status="pending"
-    ).first()
-    if not request:
-        raise HTTPException(status_code=404, detail="Join request not found")
-
-    request.status = "approved"
-    membership = models.GuildMember(user_id=user_id, guild_id=guild_id, role="Member")
-    db.add(membership)
+    # Mark request approved and create membership
+    pending.status = "approved"
+    new_member = models.GuildMember(user_id=user_id, guild_id=guild_id, role="Member")
+    db.add(new_member)
     db.commit()
 
+    return RedirectResponse(url=f"/guilds/{guild_id}", status_code=HTTP_303_SEE_OTHER)
 
+
+# 3. Reject join request (Founder or Manager)
 @router.post("/guilds/{guild_id}/requests/{user_id}/reject")
 def reject_request(
     guild_id: int,
@@ -295,23 +405,75 @@ def reject_request(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_cookie),
 ):
-    membership = db.query(models.GuildMember).filter_by(
-        user_id=current_user.id, guild_id=guild_id
-    ).first()
-    if not membership or membership.role != "Founder":
-        raise HTTPException(status_code=403, detail="Only the founder can reject requests")
+    # Fetch guild
+    guild = db.query(models.Guild).filter(models.Guild.id == guild_id).first()
+    if not guild:
+        raise HTTPException(status_code=404, detail="Guild not found")
 
-    reject_user_request(guild_id, user_id, db)
-    return RedirectResponse(f"/guilds/{guild_id}", status_code=HTTP_303_SEE_OTHER)
+    # Check caller’s membership and role
+    caller_membership = (
+        db.query(models.GuildMember)
+        .filter_by(user_id=current_user.id, guild_id=guild_id)
+        .first()
+    )
+    if not caller_membership or caller_membership.role not in ("Founder", "Manager"):
+        raise HTTPException(status_code=403, detail="Only a Founder or Manager can reject requests")
 
-
-def reject_user_request(guild_id: int, user_id: int, db: Session):
-    request = db.query(models.GuildJoinRequest).filter_by(
-        guild_id=guild_id, user_id=user_id, status="pending"
-    ).first()
-    if not request:
+    # Reject logic
+    pending = (
+        db.query(models.GuildJoinRequest)
+        .filter_by(guild_id=guild_id, user_id=user_id, status="pending")
+        .first()
+    )
+    if not pending:
         raise HTTPException(status_code=404, detail="Join request not found")
 
-    request.status = "rejected"
+    pending.status = "rejected"
     db.commit()
 
+    return RedirectResponse(url=f"/guilds/{guild_id}", status_code=HTTP_303_SEE_OTHER)
+
+
+# 4. Kick guild member (Founder or Manager, but cannot kick Founder or other Managers if caller is Manager)
+@router.post("/guilds/{guild_id}/kick/{member_id}")
+def kick_guild_member(
+    guild_id: int,
+    member_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_cookie),
+):
+    # Fetch guild and verify existence
+    guild = db.query(models.Guild).filter(models.Guild.id == guild_id).first()
+    if not guild:
+        raise HTTPException(status_code=404, detail="Guild not found")
+
+    # Fetch caller’s membership + role
+    caller_membership = (
+        db.query(models.GuildMember)
+        .filter_by(user_id=current_user.id, guild_id=guild_id)
+        .first()
+    )
+    if not caller_membership or caller_membership.role not in ("Founder", "Manager"):
+        raise HTTPException(status_code=403, detail="Only a Founder or Manager can kick members")
+
+    # Fetch the target membership
+    target_membership = (
+        db.query(models.GuildMember)
+        .filter_by(user_id=member_id, guild_id=guild_id)
+        .first()
+    )
+    if not target_membership:
+        raise HTTPException(status_code=404, detail="User is not a member of this guild")
+
+    # Prevent kicking the founder
+    if target_membership.role == "Founder":
+        raise HTTPException(status_code=400, detail="Founder cannot be kicked")
+
+    # If caller is Manager, they cannot kick other Managers
+    if caller_membership.role == "Manager" and target_membership.role == "Manager":
+        raise HTTPException(status_code=403, detail="Managers cannot kick fellow Managers")
+
+    # All checks passed → delete membership
+    db.delete(target_membership)
+    db.commit()
+    return RedirectResponse(url=f"/guilds/{guild_id}", status_code=HTTP_303_SEE_OTHER)

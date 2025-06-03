@@ -5,90 +5,126 @@
   <title>Available Guilds</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background: #0f0f1f;
-      color: #eee;
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
-    h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 2rem;
-      color: #00d9ff;
-      margin-bottom: 1rem;
-    }
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-    .create-btn {
-      background: #28a745;
-      color: white;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      text-decoration: none;
-      font-size: 1rem;
-      transition: background 0.3s ease;
-    }
-    .create-btn:hover {
-      background: #218838;
-    }
-    .guild-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-    }
-    .guild-card {
-      background: #1a1a2e;
-      border: 1px solid #333;
-      padding: 1rem;
-      border-radius: 8px;
-      width: 250px;
-      box-shadow: 0 0 10px rgba(0,255,255,0.1);
-      transition: transform 0.2s ease;
-    }
-    .guild-card:hover {
-      transform: translateY(-5px);
-    }
-    .guild-name {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.3rem;
-      color: #00c3ff;
-    }
-    .guild-description {
-      font-size: 0.9rem;
-      color: #ccc;
-      margin: 0.5rem 0 1rem;
-    }
-    .view-btn {
-      display: inline-block;
-      padding: 0.5rem 1rem;
-      background: #2d89ef;
-      color: white;
-      border-radius: 6px;
-      font-weight: bold;
-      text-decoration: none;
-      transition: background 0.3s ease;
-    }
-    .view-btn:hover {
-      background: #1b5bbf;
-    }
-    a.back-link {
-      display: inline-block;
-      margin-top: 2rem;
-      color: #00d9ff;
-      text-decoration: none;
-    }
-    a.back-link:hover {
-      text-decoration: underline;
-    }
-  </style>
+:root {
+  --primary: #00d9ff;
+  --bg: #0f0f1f;
+  --card-bg: #1a1a2e;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #2d89ef;
+  --text-light: #ccc;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: var(--bg);
+  color: #eee;
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 2rem;
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.create-btn {
+  background: #28a745;
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  text-decoration: none;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  transition: background 0.3s ease;
+}
+
+.create-btn:hover {
+  background: #218838;
+}
+
+.guild-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.guild-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  padding: 1.2rem;
+  border-radius: 10px;
+  width: 260px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.guild-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 24px rgba(0, 217, 255, 0.2);
+}
+
+.guild-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.4rem;
+  color: var(--primary);
+}
+
+.guild-description {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin: 0.6rem 0 1rem;
+}
+
+.view-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.3s ease;
+}
+
+.view-btn:hover {
+  background: #1b5bbf;
+}
+
+a.back-link {
+  display: inline-block;
+  margin-top: 2rem;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a.back-link:hover {
+  text-decoration: underline;
+}
+@media (max-width: 600px) {
+  .guild-list {
+    flex-direction: column;
+    align-items: center;
+  }
+  .guild-card {
+    width: 100%;
+  }
+}
+</style>
 </head>
 <body>
   <div class="top-bar">

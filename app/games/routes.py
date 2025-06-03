@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Form, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -127,3 +127,6 @@ def post_chat_message(
     db.commit()
     return RedirectResponse(url=f"/game-chat/{room_id}/chat", status_code=303)
 
+@router.get("/games/piano", response_class=HTMLResponse)
+def piano_game(request: Request):
+    return templates.TemplateResponse("piano.html", {"request": request})

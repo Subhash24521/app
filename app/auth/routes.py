@@ -1,15 +1,18 @@
+import secrets
 from fastapi import APIRouter, Depends, Request, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from datetime import timedelta
-
+from datetime import datetime, timedelta
+from app.auth.config import Settings
+from app.core.email import send_reset_email
 from app.core.database import get_db
 from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.deps import get_current_user_from_cookie
 from app.db import models
+
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -93,3 +96,71 @@ def update_profile(
 
     db.commit()
     return RedirectResponse("/profile", status_code=302)
+
+
+@router.get("/forgot-password")
+def forgot_password_form(request: Request):
+    return templates.TemplateResponse("forgot_password.html", {"request": request})
+
+
+@router.post("/forgot-password")
+def forgot_password_submit(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if user:
+        import uuid
+        from datetime import datetime, timedelta
+
+        token = str(uuid.uuid4())
+        user.reset_token = token
+        user.reset_token_expires = datetime.utcnow() + timedelta(minutes=15)
+        db.commit()
+
+        # Send email with token
+        send_reset_email(user.email, token)
+
+    return templates.TemplateResponse("forgot_password.html", {
+        "request": request,
+        "message": "If the email exists, a reset link has been sent."
+    })
+
+
+@router.get("/reset-password")
+def reset_password_form(request: Request, token: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.reset_token == token).first()
+    if not user or user.reset_token_expires < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    return templates.TemplateResponse("reset_password.html", {"request": request, "token": token})
+
+
+@router.post("/reset-password")
+def reset_password_submit(
+    request: Request,
+    token: str = Form(...),
+    new_password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.reset_token == token).first()
+    if not user or user.reset_token_expires < datetime.utcnow():
+        return templates.TemplateResponse("reset_password.html", {"request": request, "token": token, "error": "Token is invalid or expired."})
+
+    hashed_password = pwd_context.hash(new_password)
+    user.hashed_password = hashed_password
+    user.reset_token = None
+    user.reset_token_expires = None
+    db.commit()
+
+    return RedirectResponse(url="/", status_code=302)
+
+
+
+
+@router.get("/protected")
+def protected_route(user: models.User = Depends(get_current_user_from_cookie)):
+    return {"user": user.username}
+
+
+

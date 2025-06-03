@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Private Chat with {{ friend.username }}</h2>
+
+<div id="chat-box" style="border:1px solid #ccc; padding:10px; max-height:300px; overflow-y:scroll;">
+  {% for msg in messages %}
+    <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
+  {% endfor %}
+</div>
+
+<form method="post" action="/chat/private/{{ friend.id }}">
+  <input type="text" name="content" placeholder="Type a message" required>
+  <button type="submit">Send</button>
+</form>
+{% endblock %}

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Your Friends – GamerHub</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #0e0e1a, #1c1c2c);
+      color: #e0e0f0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background: rgba(40, 40, 60, 0.75);
+      backdrop-filter: blur(14px);
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(80, 120, 255, 0.15);
+      padding: 30px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.9rem;
+      color: #8ab4f8;
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+
+    .friends-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .friend-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1f1f2f;
+      padding: 14px 20px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      transition: background 0.2s ease;
+    }
+    .friend-item:hover {
+      background: #2a2a3e;
+    }
+
+    .friend-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      overflow: hidden;
+    }
+    .friend-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4da6ff, #1b3a91);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow:
+        0 0 0 2px #121212,
+        0 0 6px #4da6ffaa;
+      user-select: none;
+    }
+    .friend-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+    }
+    .chat-btn {
+      background: linear-gradient(135deg, #4a63d1, #3c49a5);
+      color: #fff;
+      box-shadow: 0 0 12px #4a63d1aa;
+    }
+    .chat-btn:hover {
+      background: linear-gradient(135deg, #3a50b0, #2c3b94);
+      box-shadow: 0 0 16px #64a0ffcc;
+    }
+    .unfriend-btn {
+      background: #ff4d4d;
+      color: #fff;
+      box-shadow: 0 0 12px #ff4d4d88;
+    }
+    .unfriend-btn:hover {
+      background: #cc0000;
+      box-shadow: 0 0 16px #ff7f7f88;
+    }
+
+    .no-friends {
+      text-align: center;
+      font-style: italic;
+      color: #aaa;
+      margin-top: 40px;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .container {
+        padding: 20px;
+      }
+      .friend-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .btn {
+        width: 48%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>👾 Your Friends</h1>
+<div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
+  <a href="/friends/requests">
+    <button type="button" class="btn chat-btn">Friend Requests</button>
+  </a>
+  <a href="/friends/add">
+    <button type="button" class="btn chat-btn">Add Friend</button>
+  </a>
+</div>
+
+    {% if friends %}
+      <ul class="friends-list">
+        {% for friend in friends %}
+          {# Compute initials for avatar #}
+          {% set parts = friend.username.split(" ") %}
+          {% if parts|length >= 2 %}
+            {% set initials = (parts[0][0] + parts[1][0]).upper() %}
+          {% else %}
+            {% set initials = friend.username[:2].upper() %}
+          {% endif %}
+
+          <li class="friend-item">
+            <div class="friend-info">
+              <div class="friend-avatar">{{ initials }}</div>
+              <div class="friend-name">{{ friend.username }}</div>
+            </div>
+
+            <div class="actions">
+              <!-- Chat button: pre-select this friend as receiver -->
+              <a href="/private-messages/">
+                <button type="button" class="btn chat-btn">Chat</button>
+              </a>
+
+              <!-- Unfriend button: posts to /friends/unfriend/{friend.id} -->
+              <form method="post" action="/friends/unfriend/{{ friend.id }}" style="margin:0;">
+                <button type="submit" class="btn unfriend-btn">Unfriend</button>
+              </form>
+            </div>
+          </li>
+          
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="no-friends">No friends found. Add someone to start chatting!</div>
+    {% endif %}
+  </div>
+  
+</body>
+</html>

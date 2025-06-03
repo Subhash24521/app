@@ -1,0 +1,4 @@
+apache-airflow==2.10.5
+SQLAlchemy>=1.4.36,<2.0
+alembic==1.15.2
+# other Airflow-compatible packages...

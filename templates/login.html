@@ -3,60 +3,66 @@
 
 {% block content %}
 <style>
-    /* === Login Page Styles === */
+/* === Login Page Styles === */
 .login-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 80vh;
     padding: 2rem;
+    background-color: #0f0f0f;
 }
 
 .login-card {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(15, 15, 15, 0.9);
     border: 1px solid rgba(0, 255, 255, 0.2);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 2rem;
-    max-width: 400px;
+    max-width: 420px;
     width: 100%;
     color: #f0f0f0;
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
     text-align: center;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .login-card h2 {
     margin-bottom: 1.5rem;
     color: #00ffe1;
-    font-family: 'Orbitron', sans-serif;
 }
 
 .login-form input {
     width: 100%;
-    padding: 0.8rem;
+    padding: 0.85rem;
     margin-bottom: 1rem;
     border: none;
-    border-radius: 8px;
-    background-color: #1a1a1a;
+    border-radius: 10px;
+    background-color: #1e1e1e;
     color: #fff;
     font-size: 1rem;
-    box-shadow: inset 0 0 5px rgba(0, 255, 255, 0.1);
-    outline: none;
+    box-shadow: inset 0 0 6px rgba(0, 255, 255, 0.15);
+    transition: box-shadow 0.2s ease;
+}
+
+.login-form input:focus {
+    box-shadow: 0 0 5px #00ffe1;
 }
 
 .login-form input::placeholder {
-    color: #bbb;
+    color: #aaa;
 }
 
 .login-form button {
     width: 100%;
-    padding: 0.8rem;
+    padding: 0.85rem;
     background-color: #00ffe1;
     color: #000;
     font-weight: bold;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    transition: 0.3s;
+    font-family: inherit;
+    transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .login-form button:hover {
@@ -64,36 +70,48 @@
     box-shadow: 0 0 15px #00ffe1;
 }
 
-.login-footer {
+.login-footer,
+.login-card p {
     margin-top: 1rem;
     font-size: 0.9rem;
 }
 
-.login-footer a {
+.login-footer a,
+.login-card a {
     color: #00ffe1;
     text-decoration: none;
 }
 
-.error {
-    background: rgba(255, 0, 0, 0.2);
-    color: #ff8080;
-    padding: 0.5rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
+.login-footer a:hover,
+.login-card a:hover {
+    text-decoration: underline;
 }
 
+.error {
+    background: rgba(255, 0, 0, 0.15);
+    color: #ff6b6b;
+    padding: 0.6rem;
+    border-radius: 8px;
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+}
 </style>
+
 <div class="login-wrapper">
     <div class="login-card">
         <h2>🔐 Login</h2>
+
         {% if error %}
             <p class="error">{{ error }}</p>
         {% endif %}
+
         <form method="post" class="login-form">
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
+
+        <p><a href="/forgot-password">Forgot your password?</a></p>
         <p class="login-footer">Don't have an account? <a href="/register">Register</a></p>
     </div>
 </div>

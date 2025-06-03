@@ -1,0 +1,7 @@
+fastapi==0.110.0           # pulls starlette 0.36.x automatically
+flask==2.2.5
+flask-sqlalchemy==2.5.1
+SQLAlchemy==1.4.49
+alembic==1.11.0
+flask-jwt-extended==4.7.1
+PyJWT==2.8.0

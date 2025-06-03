@@ -1,0 +1,3 @@
+chatterbot==1.2.6
+SQLAlchemy>=2.0,<2.1
+# other ChatterBot-compatible packages...
