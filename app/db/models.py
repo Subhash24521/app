@@ -40,6 +40,20 @@ class GameRoom(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     creator = relationship("User", back_populates="rooms")
     messages = relationship("Message", back_populates="room")
+    participants = relationship("GameRoomUser", back_populates="room", cascade="all, delete-orphan")    
+
+
+class GameRoomUser(Base):
+    __tablename__ = "game_room_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    room_id = Column(Integer, ForeignKey("game_rooms.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    joined_at = Column(DateTime, default=datetime.utcnow)
+
+    room = relationship("GameRoom", back_populates="participants")
+    user = relationship("User")
+
 
 class Message(Base):
     __tablename__ = 'messages'

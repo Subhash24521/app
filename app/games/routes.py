@@ -86,23 +86,15 @@ def room_detail(
     })
 
 # ✅ Get Chat Messages
-@router.get("/game-chat/{room_id}/chat")
-def get_chat_messages(
-    request: Request,
-    room_id: int,
-    user: models.User = Depends(get_current_user_from_cookie),
-    db: Session = Depends(get_db)
-):
-    room = db.query(models.GameRoom).filter(models.GameRoom.id == room_id).first()
-    if not room:
-        raise HTTPException(status_code=404, detail="Game room not found")
-    messages = db.query(models.Message).filter(models.Message.room_id == room_id).order_by(models.Message.timestamp.asc()).all()
+@app.get("/game-chat/{room_id}", response_class=HTMLResponse)
+async def chat_room_view(request: Request, room_id: int, user=Depends(get_current_user)):
+    room = get_room_by_id(room_id)
+    messages = room.messages  # Or query messages separately
     return templates.TemplateResponse("chat_room.html", {
         "request": request,
-        "user": user,
         "room": room,
-        "messages": messages
-        
+        "messages": messages,
+        "user": user,
     })
 
 # ✅ Post Chat Message
@@ -130,3 +122,8 @@ def post_chat_message(
 @router.get("/games/piano", response_class=HTMLResponse)
 def piano_game(request: Request):
     return templates.TemplateResponse("piano.html", {"request": request})
+
+@app.post("/game-room/{room_id}/kick/{user_id}")
+async def kick_user(room_id: int, user_id: int, user=Depends(get_current_user)):
+    # Kick logic here
+    return RedirectResponse(f"/game-chat/{room_id}", status_code=303)

@@ -52,6 +52,38 @@
     form button:hover {
       background: #3a50b0;
     }
+    .participants {
+      margin-top: 30px;
+    }
+    .participants h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+    .participants ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .participants li {
+      margin-bottom: 8px;
+    }
+    .kick-button {
+      margin-left: 10px;
+      background: #ff5c5c;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .exit-button {
+      background: #ff4d4d;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
   </style>
 </head>
 <body>
@@ -85,10 +117,27 @@
       <button type="submit">Send</button>
     </form>
 
-    <form action="/game-chat/{{ room.id }}/exit" method="post" style="margin-top: 16px;">
-      <button type="submit" style="background: #ff4d4d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-        Exit Room (delete my messages)
-      </button>
+    <div class="participants">
+      <h2>Participants ({{ room.participants | length }})</h2>
+      <ul>
+        {% for participant in room.participants %}
+          <li>
+            <strong>{{ participant.user.username }}</strong>
+            {% if participant.user.id == room.created_by %}
+              <span style="color: #8fd3f4; font-size: 0.85rem;">(Owner)</span>
+            {% endif %}
+            {% if user.id == room.created_by and participant.user.id != user.id %}
+              <form method="post" action="/game-room/{{ room.id }}/kick/{{ participant.user.id }}" style="display:inline;">
+                <button type="submit" class="kick-button">Kick</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <form action="/game-chat/{{ room.id }}/exit" method="post">
+      <button type="submit" class="exit-button">Exit Room (delete my messages)</button>
     </form>
   </div>
 </body>
