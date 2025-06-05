@@ -130,3 +130,19 @@ def post_chat_message(
 @router.get("/games/piano", response_class=HTMLResponse)
 def piano_game(request: Request):
     return templates.TemplateResponse("piano.html", {"request": request})
+
+@router.get("/games/chess", response_class=HTMLResponse)
+def chess_game(request: Request):
+    return templates.TemplateResponse("chess.html", {"request": request})
+
+@router.get("/games/ludo", response_class=HTMLResponse)
+def ludo_game(request: Request):
+    return templates.TemplateResponse("ludo.html", {"request": request})
+
+@router.get("/games/snake-ladder", response_class=HTMLResponse)
+def snake_ladder_game(request: Request):
+    return templates.TemplateResponse("snake_ladder.html", {"request": request})
+
+@router.get("/games/carrom", response_class=HTMLResponse)
+def carrom_game(request: Request):
+    return templates.TemplateResponse("carrom.html", {"request": request})

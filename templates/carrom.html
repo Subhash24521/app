@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Carrom Game</title>
+    <style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #f0f0f0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+    }
+
+    .game-container {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        text-align: center;
+        max-width: 600px;
+        width: 90%;
+        animation: fadeIn 1s ease;
+    }
+
+    h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: #00ffd5;
+    }
+
+    p {
+        font-size: 1.2rem;
+        color: #ccc;
+    }
+
+    .btn {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 12px 25px;
+        background: #00ffd5;
+        color: #000;
+        font-weight: bold;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+        background: #00bfa6;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+</head>
+<body>
+    <h1>Welcome to Carrom</h1>
+    <p>Strike and pocket your way to victory!</p>
+</body>
+</html>
