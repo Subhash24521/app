@@ -15,6 +15,12 @@ class User(Base):
     reset_token = Column(String, nullable=True)
     reset_token_expires = Column(DateTime, nullable=True)
 
+    # Relationships
+    rooms = relationship("GameRoom", back_populates="creator")
+    guilds_created = relationship("Guild", back_populates="creator")
+    guild_memberships = relationship("GuildMember", back_populates="user")
+    private_messages = relationship("Message", back_populates="sender")  # renamed
+    guild_messages = relationship("GuildMessage", back_populates="user", cascade="all, delete")
 
 
 
