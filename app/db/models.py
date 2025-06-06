@@ -6,24 +6,29 @@ from app.core.database import Base
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    full_name = Column(String)
-    bio = Column(String)
-    avatar_url = Column(String)
-    reset_token = Column(String, nullable=True)
-    reset_token_expiry = Column(DateTime, nullable=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+
+    full_name = Column(String, nullable=True)
+    bio = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
     email = Column(String, unique=True, index=True, nullable=True)
+
+    reset_token = Column(String, nullable=True)
+    reset_token_expires = Column(DateTime, nullable=True)  # fixed name
+
     level = Column(Integer, default=1)
     xp = Column(Integer, default=0)
     coins = Column(Integer, default=0)
-    last_login = Column(DateTime, default=None)
+    last_login = Column(DateTime, nullable=True)
     is_admin = Column(Boolean, nullable=False, default=False)
+
+    # Relationships
     rooms = relationship("GameRoom", back_populates="creator")
-    messages = relationship("Message", back_populates="sender")
     guilds_created = relationship("Guild", back_populates="creator")
     guild_memberships = relationship("GuildMember", back_populates="user")
-    messages = relationship("GuildMessage", back_populates="user", cascade="all, delete")
+    private_messages = relationship("Message", back_populates="sender")  # renamed
+    guild_messages = relationship("GuildMessage", back_populates="user", cascade="all, delete")
 
 
 

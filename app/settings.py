@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from app.auth.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 load_dotenv()
 

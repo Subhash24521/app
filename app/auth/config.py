@@ -8,6 +8,7 @@ class Settings(BaseModel):
     ACCESS_TOKEN_EXPIRE_MINUTES: ClassVar[int] = 60 * 24 * 7
 
 
+
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
