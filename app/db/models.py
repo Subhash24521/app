@@ -14,7 +14,7 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
     reset_token = Column(String, nullable=True)
     reset_token_expires = Column(DateTime, nullable=True)
-
+    is_admin = Column(Boolean, nullable=False, default=False)
     # Relationships
     rooms = relationship("GameRoom", back_populates="creator")
     guilds_created = relationship("Guild", back_populates="creator")

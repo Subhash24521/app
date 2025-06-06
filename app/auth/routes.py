@@ -45,11 +45,17 @@ def register_user(
         })
 
     hashed_password = pwd_context.hash(password)
-    new_user = User(username=username, email=email, hashed_password=hashed_password)
+
+    new_user = User(
+        username=username,
+        email=email,
+        hashed_password=hashed_password,
+        is_admin=False  # ✅ Required to avoid IntegrityError
+    )
+
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/", status_code=302)
-
 
 
 @router.get("/")
