@@ -31,11 +31,16 @@ def register_user(request: Request, username: str = Form(...), password: str = F
     existing_user = db.query(User).filter(User.username == username).first()
     if existing_user:
         return templates.TemplateResponse("register.html", {"request": request, "error": "Username already exists"})
+
+    # ✅ this line must exist
     hashed_password = pwd_context.hash(password)
+
+    # ✅ save hashed_password, not plain password
     new_user = User(username=username, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/", status_code=302)
+
 
 @router.get("/")
 def login_form(request: Request, token: str = Cookie(None)):
@@ -55,18 +60,11 @@ def login_user(
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.username == username).first()
-    
-    # 🔥 Fix is here
-    if not user or not pwd_context.verify(password, user.hashed_password):
+
+    # ✅ compare input password with hashed password from DB
+    if not user or not pwd_context.verify(password, User.hashed_password):
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
-    token = create_access_token(
-        data={"sub": user.username},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    response = RedirectResponse(url="/dashboard", status_code=302)
-    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", secure=False)
-    return response
 
 
 @router.get("/logout")
