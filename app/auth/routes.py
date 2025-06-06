@@ -38,24 +38,29 @@ def register_user(
     existing_user = db.query(User).filter(
         (User.username == username) | (User.email == email)
     ).first()
+
     if existing_user:
         return templates.TemplateResponse("register.html", {
             "request": request,
             "error": "Username or email already exists"
         })
 
+    # ✅ Hash the password
     hashed_password = pwd_context.hash(password)
 
+    # ✅ Create user with all required fields
     new_user = User(
-    username=username,
-    email=email,
-    hashed_password=hashed_password,
-    is_admin=False  # ✅ REQUIRED
-)
+        username=username,
+        email=email,
+        hashed_password=hashed_password,
+        is_admin=False  # important!
+    )
 
     db.add(new_user)
-    db.commit()
+    db.commit()  # ✅ Save to database
+
     return RedirectResponse(url="/", status_code=302)
+
 
 
 @router.get("/")
@@ -104,12 +109,12 @@ def login_user(
 
     response = RedirectResponse(url="/dashboard", status_code=302)
     response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        samesite="lax",
-        secure=IS_RENDER
-    )
+    key="access_token",
+    value=token,
+    httponly=True,
+    samesite="lax",
+    secure=IS_RENDER  # ✅ True on Render, False locally
+)
     return response
 
 
