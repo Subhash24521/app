@@ -73,14 +73,26 @@ def login_user(
         or_(User.username == username, User.email == username)
     ).first()
 
-    if not user or not pwd_context.verify(password, User.hashed_password):
+    if not user:
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "User not found"
+        })
+
+    if not user.hashed_password:
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "No password set for this user"
+        })
+
+    if not pwd_context.verify(password, user.hashed_password):
         return templates.TemplateResponse("login.html", {
             "request": request,
             "error": "Invalid credentials"
         })
 
     token = create_access_token(
-        data={"sub": User.username},
+        data={"sub": user.username},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
@@ -93,6 +105,7 @@ def login_user(
         secure=IS_RENDER
     )
     return response
+
 
 @router.get("/logout")
 def logout():
@@ -127,10 +140,12 @@ def update_profile(
 
     if avatar:
         os.makedirs(AVATAR_DIR, exist_ok=True)
-        avatar_path = os.path.join(AVATAR_DIR, f"user_{user.id}_{avatar.filename}")
-        with open(avatar_path, "wb") as buffer:
+        filename = f"user_{user.id}_{uuid.uuid4().hex}_{avatar.filename.replace(' ', '_')}"
+    avatar_path = os.path.join(AVATAR_DIR, filename)
+
+    with open(avatar_path, "wb") as buffer:
             shutil.copyfileobj(avatar.file, buffer)
-        user.avatar_url = f"/{avatar_path}"
+            user.avatar_url = f"/{avatar_path}"
 
     db.commit()
     return RedirectResponse("/profile", status_code=302)
