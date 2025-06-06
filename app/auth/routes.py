@@ -1,7 +1,9 @@
 import secrets
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
+from fastapi import APIRouter, Cookie, Depends, Request, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from jose import JWTError
+import jwt
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -12,6 +14,7 @@ from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.deps import get_current_user_from_cookie
 from app.db import models
+from app.settings import ALGORITHM, SECRET_KEY
 
 
 router = APIRouter()
@@ -34,17 +37,24 @@ def register_user(request: Request, username: str = Form(...), password: str = F
     return RedirectResponse(url="/", status_code=302)
 
 @router.get("/")
-def login_form(request: Request):
+def login_form(request: Request, token: str = Cookie(None)):
+    if token:
+        try:
+            jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            return RedirectResponse("/dashboard")
+        except JWTError:
+            pass  # Show login page if token is invalid/expired
     return templates.TemplateResponse("login.html", {"request": request})
 
 @router.post("/")
 def login_user(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == username).first()
     if not user or not pwd_context.verify(password, user.hashed_password):
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid username or password"})
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
+
     token = create_access_token(data={"sub": user.username}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     response = RedirectResponse(url="/dashboard", status_code=302)
-    response.set_cookie(key="access_token", value=token, httponly=True)
+    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", secure=False)  # set secure=True in production
     return response
 
 @router.get("/logout")
