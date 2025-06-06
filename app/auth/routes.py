@@ -70,13 +70,17 @@ def login_user(
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(
-     or_(User.username == username, User.email == username)
-).first()
-    if not user or not pwd_context.verify(password, user.hashed_password):
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
+        or_(User.username == username, User.email == username)
+    ).first()
+
+    if not user or not pwd_context.verify(password, User.hashed_password):
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "Invalid credentials"
+        })
 
     token = create_access_token(
-        data={"sub": user.username},
+        data={"sub": User.username},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
@@ -86,7 +90,7 @@ def login_user(
         value=token,
         httponly=True,
         samesite="lax",
-        secure=IS_RENDER  
+        secure=IS_RENDER
     )
     return response
 
