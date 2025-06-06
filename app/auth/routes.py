@@ -14,7 +14,8 @@ from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.deps import get_current_user_from_cookie
 from app.db import models
-from app.settings import ALGORITHM, SECRET_KEY
+from app.auth.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+
 
 
 router = APIRouter()
