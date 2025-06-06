@@ -2,6 +2,7 @@ from fastapi import APIRouter, Cookie, Depends, Request, Form, HTTPException, Fi
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -37,18 +38,19 @@ def register_user(
     existing_user = db.query(User).filter(
         (User.username == username) | (User.email == email)
     ).first()
-
     if existing_user:
-        return templates.TemplateResponse(
-            "register.html",
-            {"request": request, "error": "Username or email already exists"}
-        )
+        return templates.TemplateResponse("register.html", {
+            "request": request,
+            "error": "Username or email already exists"
+        })
 
     hashed_password = pwd_context.hash(password)
     new_user = User(username=username, email=email, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/", status_code=302)
+
+
 
 @router.get("/")
 def login_form(request: Request, token: str = Cookie(None)):
@@ -67,7 +69,9 @@ def login_user(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(
+     or_(User.username == username, User.email == username)
+).first()
     if not user or not pwd_context.verify(password, user.hashed_password):
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
