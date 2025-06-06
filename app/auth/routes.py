@@ -27,12 +27,25 @@ def register_form(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 @router.post("/register")
-def register_user(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.username == username).first()
+def register_user(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    existing_user = db.query(User).filter(
+        (User.username == username) | (User.email == email)
+    ).first()
+
     if existing_user:
-        return templates.TemplateResponse("register.html", {"request": request, "error": "Username already exists"})
+        return templates.TemplateResponse(
+            "register.html",
+            {"request": request, "error": "Username or email already exists"}
+        )
+
     hashed_password = pwd_context.hash(password)
-    new_user = User(username=username, hashed_password=hashed_password)
+    new_user = User(username=username, email=email, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/", status_code=302)

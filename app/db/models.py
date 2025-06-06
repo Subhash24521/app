@@ -6,29 +6,15 @@ from app.core.database import Base
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)  # Required for password reset
+    hashed_password = Column(String)
     full_name = Column(String, nullable=True)
     bio = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
-    email = Column(String, unique=True, index=True, nullable=True)
-
     reset_token = Column(String, nullable=True)
-    reset_token_expires = Column(DateTime, nullable=True)  # fixed name
+    reset_token_expires = Column(DateTime, nullable=True)
 
-    level = Column(Integer, default=1)
-    xp = Column(Integer, default=0)
-    coins = Column(Integer, default=0)
-    last_login = Column(DateTime, nullable=True)
-    is_admin = Column(Boolean, nullable=False, default=False)
-
-    # Relationships
-    rooms = relationship("GameRoom", back_populates="creator")
-    guilds_created = relationship("Guild", back_populates="creator")
-    guild_memberships = relationship("GuildMember", back_populates="user")
-    private_messages = relationship("Message", back_populates="sender")  # renamed
-    guild_messages = relationship("GuildMessage", back_populates="user", cascade="all, delete")
 
 
 
