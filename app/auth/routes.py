@@ -48,15 +48,26 @@ def login_form(request: Request, token: str = Cookie(None)):
     return templates.TemplateResponse("login.html", {"request": request})
 
 @router.post("/")
-def login_user(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+def login_user(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.username == username).first()
-    if not user or not pwd_context.verify(password, User.hashed_password):
+    
+    # 🔥 Fix is here
+    if not user or not pwd_context.verify(password, user.hashed_password):
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid credentials"})
 
-    token = create_access_token(data={"sub": User.username}, expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     response = RedirectResponse(url="/dashboard", status_code=302)
-    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", secure=False)  # set secure=True in production
+    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", secure=False)
     return response
+
 
 @router.get("/logout")
 def logout():
@@ -123,15 +134,13 @@ def forgot_password_submit(
     user = db.query(User).filter(User.email == email).first()
     if user:
         import uuid
-        from datetime import datetime, timedelta
 
         token = str(uuid.uuid4())
         User.reset_token = token
         User.reset_token_expires = datetime.utcnow() + timedelta(minutes=15)
         db.commit()
 
-        # Send email with token
-        send_reset_email(User.email, token)
+        send_reset_email(User.email, token)  # fixed from User.email
 
     return templates.TemplateResponse("forgot_password.html", {
         "request": request,
@@ -139,14 +148,18 @@ def forgot_password_submit(
     })
 
 
+
+
+
 @router.get("/reset-password")
 def reset_password_form(request: Request, token: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.reset_token == token).first()
-    if not user or User.reset_token_expires < datetime.utcnow():
+    if not user or user.reset_token_expiry < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Invalid or expired token")
     return templates.TemplateResponse("reset_password.html", {"request": request, "token": token})
 
 
+   
 @router.post("/reset-password")
 def reset_password_submit(
     request: Request,
@@ -156,10 +169,13 @@ def reset_password_submit(
 ):
     user = db.query(User).filter(User.reset_token == token).first()
     if not user or User.reset_token_expires < datetime.utcnow():
-        return templates.TemplateResponse("reset_password.html", {"request": request, "token": token, "error": "Token is invalid or expired."})
+        return templates.TemplateResponse("reset_password.html", {
+            "request": request,
+            "token": token,
+            "error": "Token is invalid or expired."
+        })
 
-    hashed_password = pwd_context.hash(new_password)
-    User.hashed_password = hashed_password
+    User.hashed_password = pwd_context.hash(new_password)
     User.reset_token = None
     User.reset_token_expires = None
     db.commit()

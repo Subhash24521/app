@@ -1,24 +1,20 @@
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 import smtplib
-
+from app.core.config import EMAIL_ADDRESS, EMAIL_PASSWORD
 
 def send_reset_email(to_email: str, token: str):
-    print(f"Attempting to send reset email to: {to_email}")
+    msg = EmailMessage()
+    msg['Subject'] = 'Reset Your Password'
+    msg['From'] = EMAIL_ADDRESS
+    msg['To'] = to_email
+
+    reset_link = f"https://piano-app-sd6h.onrender.com/reset-password?token={token}"
+    msg.set_content(f"Click this link to reset your password:\n{reset_link}")
+
     try:
-        reset_link = f"http://localhost:8000/reset-password?token={token}"
-        subject = "Password Reset Request"
-        body = f"Click the link to reset your password: {reset_link}"
-
-        message = MIMEText(body)
-        message["Subject"] = subject
-        message["From"] = "yourgmail@gmail.com"
-        message["To"] = to_email
-
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            server.starttls()
-            server.login("yourgmail@gmail.com", "your-app-password")
-            server.sendmail("yourgmail@gmail.com", to_email, message.as_string())
-
-        print("✅ Email sent successfully.")
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            smtp.send_message(msg)
+        print("✅ Reset email sent to:", to_email)
     except Exception as e:
-        print(f"❌ Error sending email: {e}")
+        print("❌ Email sending failed:", e)
