@@ -72,7 +72,6 @@ def login_form(request: Request, token: str = Cookie(None)):
         except JWTError:
             pass
     return templates.TemplateResponse("login.html", {"request": request})
-
 @router.post("/")
 def login_user(
     request: Request,
@@ -84,19 +83,7 @@ def login_user(
         or_(User.username == username, User.email == username)
     ).first()
 
-    if not user:
-        return templates.TemplateResponse("login.html", {
-            "request": request,
-            "error": "User not found"
-        })
-
-    if not user.hashed_password:
-        return templates.TemplateResponse("login.html", {
-            "request": request,
-            "error": "No password set for this user"
-        })
-
-    if not pwd_context.verify(password, user.hashed_password):
+    if not user or not pwd_context.verify(password, user.hashed_password):
         return templates.TemplateResponse("login.html", {
             "request": request,
             "error": "Invalid credentials"
@@ -109,13 +96,14 @@ def login_user(
 
     response = RedirectResponse(url="/dashboard", status_code=302)
     response.set_cookie(
-    key="access_token",
-    value=token,
-    httponly=True,
-    samesite="lax",
-    secure=IS_RENDER  # ✅ True on Render, False locally
-)
+        key="access_token",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        secure=os.getenv("RENDER") == "true"  # only True on Render HTTPS
+    )
     return response
+
 
 
 @router.get("/logout")
@@ -126,7 +114,8 @@ def logout():
 
 @router.get("/dashboard")
 def dashboard(request: Request, user: User = Depends(get_current_user_from_cookie)):
-    return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+  return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+
 
 
 @router.get("/profile")

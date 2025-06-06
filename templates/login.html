@@ -104,12 +104,11 @@
         {% if error %}
             <p class="error">{{ error }}</p>
         {% endif %}
-
-        <form method="post" class="login-form">
-            <input type="text" name="username" placeholder="Username or Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
+<form method="POST" action="/" class="login-form">
+  <input type="text" name="username" placeholder="Username or Email" required autocomplete="username">
+  <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+  <button type="submit">Login</button>
+</form>
 
         <p><a href="/forgot-password">Forgot your password?</a></p>
         <p class="login-footer">Don't have an account? <a href="/register">Register</a></p>
