@@ -3,92 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Your Friends – GamerHub</title>
+  <title>Your Friends – HoloZone</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
+
+    :root {
+      --bg: #0f111a;
+      --card: #1a1d2c;
+      --accent: #6c5ce7;
+      --accent-light: #8e7fff;
+      --text: #f5f6fa;
+      --subtext: #b2b6c7;
+      --danger: #ff4d4d;
+      --danger-dark: #cc0000;
+    }
 
     * {
-      box-sizing: border-box;
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
     }
+
     body {
-      font-family: 'Outfit', sans-serif;
-      background: linear-gradient(135deg, #0e0e1a, #1c1c2c);
-      color: #e0e0f0;
-      min-height: 100vh;
+      font-family: 'Orbitron', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 40px 20px;
+      min-height: 100vh;
     }
 
     .container {
-      background: rgba(40, 40, 60, 0.75);
-      backdrop-filter: blur(14px);
+      background: rgba(26, 29, 44, 0.7);
+      backdrop-filter: blur(16px);
       border-radius: 20px;
-      box-shadow: 0 0 30px rgba(80, 120, 255, 0.15);
       padding: 30px;
-      max-width: 600px;
+      box-shadow: 0 0 30px var(--accent-light);
+      max-width: 700px;
       width: 100%;
     }
 
     h1 {
+      font-size: 2rem;
       text-align: center;
-      font-size: 1.9rem;
-      color: #8ab4f8;
+      color: var(--accent-light);
       margin-bottom: 24px;
-      font-weight: 600;
+      font-weight: 800;
+      letter-spacing: 1px;
     }
 
     .friends-list {
       list-style: none;
-      padding: 0;
       margin: 0;
+      padding: 0;
     }
 
     .friend-item {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px 20px;
+      margin-bottom: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #1f1f2f;
-      padding: 14px 20px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 10px #6c5ce744;
       transition: background 0.2s ease;
     }
+
     .friend-item:hover {
-      background: #2a2a3e;
+      background: #222538;
     }
 
     .friend-info {
       display: flex;
       align-items: center;
       gap: 16px;
-      overflow: hidden;
     }
+
     .friend-avatar {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #4da6ff, #1b3a91);
+      background: linear-gradient(135deg, #6c5ce7, #4c32a8);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.2rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 1.2rem;
-      color: #fff;
-      flex-shrink: 0;
-      box-shadow:
-        0 0 0 2px #121212,
-        0 0 6px #4da6ffaa;
+      box-shadow: 0 0 10px #8e7fff99;
       user-select: none;
     }
+
     .friend-name {
       font-size: 1.1rem;
+      color: #ffffff;
       font-weight: 600;
-      color: #fff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -98,47 +110,65 @@
       display: flex;
       gap: 10px;
     }
+
     .btn {
       padding: 8px 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      user-select: none;
+      transition: all 0.3s ease;
     }
+
     .chat-btn {
-      background: linear-gradient(135deg, #4a63d1, #3c49a5);
+      background: linear-gradient(135deg, var(--accent), #3c49a5);
       color: #fff;
-      box-shadow: 0 0 12px #4a63d1aa;
+      box-shadow: 0 0 12px var(--accent);
     }
+
     .chat-btn:hover {
-      background: linear-gradient(135deg, #3a50b0, #2c3b94);
-      box-shadow: 0 0 16px #64a0ffcc;
+      background: linear-gradient(135deg, #4a63ff, #6c5ce7);
+      box-shadow: 0 0 16px #8e7fffaa;
     }
+
     .unfriend-btn {
-      background: #ff4d4d;
+      background: var(--danger);
       color: #fff;
       box-shadow: 0 0 12px #ff4d4d88;
     }
+
     .unfriend-btn:hover {
-      background: #cc0000;
-      box-shadow: 0 0 16px #ff7f7f88;
+      background: var(--danger-dark);
+      box-shadow: 0 0 16px #ff7f7f99;
     }
 
     .no-friends {
       text-align: center;
-      font-style: italic;
-      color: #aaa;
       margin-top: 40px;
+      color: var(--subtext);
+      font-style: italic;
     }
 
-    /* Responsive */
+    .top-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .top-buttons .btn {
+      background: linear-gradient(135deg, #4a63ff, #6c5ce7);
+      color: white;
+      box-shadow: 0 0 10px #6c5ce7aa;
+    }
+
+    .top-buttons .btn:hover {
+      background: linear-gradient(135deg, #5a75ff, #7c6cff);
+    }
+
     @media (max-width: 480px) {
-      .container {
-        padding: 20px;
-      }
       .friend-item {
         flex-direction: column;
         align-items: flex-start;
@@ -157,20 +187,20 @@
 </head>
 <body>
   <div class="container">
-    <h1>👾 Your Friends</h1>
-<div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-  <a href="/friends/requests">
-    <button type="button" class="btn chat-btn">Friend Requests</button>
-  </a>
-  <a href="/friends/add">
-    <button type="button" class="btn chat-btn">Add Friend</button>
-  </a>
-</div>
+    <h1>💫 Your Friends</h1>
+
+    <div class="top-buttons">
+      <a href="/friends/requests">
+        <button type="button" class="btn">Friend Requests</button>
+      </a>
+      <a href="/friends/add">
+        <button type="button" class="btn">Add Friend</button>
+      </a>
+    </div>
 
     {% if friends %}
       <ul class="friends-list">
         {% for friend in friends %}
-          {# Compute initials for avatar #}
           {% set parts = friend.username.split(" ") %}
           {% if parts|length >= 2 %}
             {% set initials = (parts[0][0] + parts[1][0]).upper() %}
@@ -183,26 +213,20 @@
               <div class="friend-avatar">{{ initials }}</div>
               <div class="friend-name">{{ friend.username }}</div>
             </div>
-
             <div class="actions">
-              <!-- Chat button: pre-select this friend as receiver -->
               <a href="/private-messages/">
                 <button type="button" class="btn chat-btn">Chat</button>
               </a>
-
-              <!-- Unfriend button: posts to /friends/unfriend/{friend.id} -->
               <form method="post" action="/friends/unfriend/{{ friend.id }}" style="margin:0;">
                 <button type="submit" class="btn unfriend-btn">Unfriend</button>
               </form>
             </div>
           </li>
-          
         {% endfor %}
       </ul>
     {% else %}
       <div class="no-friends">No friends found. Add someone to start chatting!</div>
     {% endif %}
   </div>
-  
 </body>
 </html>

@@ -1,21 +1,21 @@
 from fastapi import Cookie, Depends, HTTPException
-from jose import jwt, JWTError
-from app.core.config import SECRET_KEY, ALGORITHM
-from app.core.database import get_db
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+from app.core.database import get_db
 from app.db.models import User
+from app.auth.config import SECRET_KEY, ALGORITHM
 
 def get_current_user_from_cookie(
-    token: str = Cookie(None),
+    access_token: str = Cookie(None),  # ✅ Must match cookie key
     db: Session = Depends(get_db)
-):
-    if not token:
+) -> User:
+    if not access_token:
         raise HTTPException(status_code=401, detail="No token found")
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
-        if username is None:
+        if not username:
             raise HTTPException(status_code=401, detail="Invalid token")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")

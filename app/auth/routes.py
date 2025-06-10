@@ -23,9 +23,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 IS_RENDER = os.getenv("RENDER") == "true"
 AVATAR_DIR = "static/avatars"
 
+
 @router.get("/register")
 def register_form(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
+
 
 @router.post("/register")
 def register_user(
@@ -35,43 +37,24 @@ def register_user(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    existing_user = db.query(User).filter(
-        (User.username == username) | (User.email == email)
-    ).first()
-
+    existing_user = db.query(User).filter(or_(User.username == username, User.email == email)).first()
     if existing_user:
         return templates.TemplateResponse("register.html", {
             "request": request,
             "error": "Username or email already exists"
         })
-
-    # ✅ Hash the password
     hashed_password = pwd_context.hash(password)
-
-    # ✅ Create user with all required fields
-    new_user = User(
-        username=username,
-        email=email,
-        hashed_password=hashed_password,
-        is_admin=False  # important!
-    )
-
+    new_user = User(username=username, email=email, hashed_password=hashed_password)
     db.add(new_user)
-    db.commit()  # ✅ Save to database
-
+    db.commit()
     return RedirectResponse(url="/", status_code=302)
 
 
-
 @router.get("/")
-def login_form(request: Request, token: str = Cookie(None)):
-    if token:
-        try:
-            jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            return RedirectResponse("/dashboard")
-        except JWTError:
-            pass
+def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
+
+
 @router.post("/")
 def login_user(
     request: Request,
@@ -79,31 +62,23 @@ def login_user(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(
-        or_(User.username == username, User.email == username)
-    ).first()
-
+    user = db.query(User).filter(or_(User.username == username, User.email == username)).first()
     if not user or not pwd_context.verify(password, user.hashed_password):
-        return templates.TemplateResponse("login.html", {
-            "request": request,
-            "error": "Invalid credentials"
-        })
-
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid username or password"})
+    
     token = create_access_token(
         data={"sub": user.username},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-
     response = RedirectResponse(url="/dashboard", status_code=302)
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
         samesite="lax",
-        secure=os.getenv("RENDER") == "true"  # only True on Render HTTPS
+        secure=IS_RENDER
     )
     return response
-
 
 
 @router.get("/logout")
@@ -112,9 +87,17 @@ def logout():
     response.delete_cookie("access_token")
     return response
 
+
 @router.get("/dashboard")
 def dashboard(request: Request, user: User = Depends(get_current_user_from_cookie)):
-  return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "user": user,
+        "coins": user.coins,
+        "level": user.level,
+        "xp": user.xp,
+        "high_score": user.high_score
+    })
 
 
 
@@ -122,15 +105,16 @@ def dashboard(request: Request, user: User = Depends(get_current_user_from_cooki
 def view_profile(request: Request, user: User = Depends(get_current_user_from_cookie)):
     return templates.TemplateResponse("profile.html", {"request": request, "user": user})
 
+
 @router.get("/profile/edit")
 def edit_profile_form(request: Request, user: User = Depends(get_current_user_from_cookie)):
     return templates.TemplateResponse("edit_profile.html", {"request": request, "user": user})
 
+
 @router.post("/profile/edit")
 def update_profile(
-    request: Request,
-    full_name: str = Form(...),
-    bio: str = Form(...),
+    full_name: str = Form(...),  # required
+    bio: str = Form(...),        # required
     avatar: UploadFile = File(None),
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user_from_cookie)
@@ -141,18 +125,19 @@ def update_profile(
     if avatar:
         os.makedirs(AVATAR_DIR, exist_ok=True)
         filename = f"user_{user.id}_{uuid.uuid4().hex}_{avatar.filename.replace(' ', '_')}"
-    avatar_path = os.path.join(AVATAR_DIR, filename)
-
-    with open(avatar_path, "wb") as buffer:
+        avatar_path = os.path.join(AVATAR_DIR, filename)
+        with open(avatar_path, "wb") as buffer:
             shutil.copyfileobj(avatar.file, buffer)
-            user.avatar_url = f"/{avatar_path}"
+        user.avatar_url = f"/{avatar_path}"
 
     db.commit()
     return RedirectResponse("/profile", status_code=302)
 
+
 @router.get("/forgot-password")
 def forgot_password_form(request: Request):
     return templates.TemplateResponse("forgot_password.html", {"request": request})
+
 
 @router.post("/forgot-password")
 def forgot_password_submit(
@@ -172,12 +157,14 @@ def forgot_password_submit(
         "message": "If the email exists, a reset link has been sent."
     })
 
+
 @router.get("/reset-password")
 def reset_password_form(request: Request, token: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.reset_token == token).first()
     if not user or user.reset_token_expires < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Invalid or expired token")
     return templates.TemplateResponse("reset_password.html", {"request": request, "token": token})
+
 
 @router.post("/reset-password")
 def reset_password_submit(
@@ -200,6 +187,50 @@ def reset_password_submit(
     db.commit()
     return RedirectResponse(url="/", status_code=302)
 
+
 @router.get("/protected")
 def protected_route(user: User = Depends(get_current_user_from_cookie)):
     return {"user": user.username}
+
+
+@router.get("/clear-users")
+def clear_users(db: Session = Depends(get_db), user: User = Depends(get_current_user_from_cookie)):
+    if not user or user.username != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    db.query(User).delete()
+    db.commit()
+    return {"message": "All users deleted"}
+
+@router.post("/daily-coins")
+def claim_daily_coins(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user_from_cookie)
+):
+    now = datetime.utcnow()
+    if user.last_daily_claim and (now - user.last_daily_claim) < timedelta(hours=24):
+        return {"error": "You've already claimed daily coins today."}
+
+    user.coins += 100
+    user.last_daily_claim = now
+    db.commit()
+    return {"message": "Claimed 100 coins!", "coins": user.coins}
+
+
+@router.post("/submit-score")
+def submit_score(
+    score: int = Form(...),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user_from_cookie)
+):
+    if score > user.high_score:
+        user.high_score = score
+        db.commit()
+    return {"message": "Score submitted", "high_score": user.high_score}
+
+
+def add_xp(user: User, db: Session, xp_amount: int):
+    user.xp += xp_amount
+    while user.xp >= user.level * 100:
+        user.xp -= user.level * 100
+        user.level += 1
+    db.commit()

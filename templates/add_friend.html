@@ -3,74 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Add a Friend – GamerHub</title>
+  <title>Add a Friend – HoloZone</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    /* Minimal styling—add your own dark‐mode rules as desired */
+    :root {
+      --bg: #0f0f1c;
+      --glass: rgba(255, 255, 255, 0.06);
+      --primary: #00ffe0;
+      --secondary: #ff00e0;
+      --text-main: #e6faff;
+      --text-sub: #9caec2;
+      --error: #ff4d4d;
+      --radius: 16px;
+      --glow: 0 0 14px #00ffe088;
+    }
+
     body {
-      background: #1c1c2c;
-      color: #e0e0f0;
-      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      font-family: 'Orbitron', sans-serif;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
       margin: 0;
     }
+
     .container {
-      background: rgba(40, 40, 60, 0.8);
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 0 20px rgba(80, 120, 255, 0.2);
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      padding: 2.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--glow);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-      color: #8ab4f8;
-      font-weight: 600;
+      margin-bottom: 1.5rem;
+      font-size: 1.75rem;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
+
     form {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
+
     input[type="text"] {
-      padding: 10px 12px;
+      padding: 12px 14px;
       border: none;
-      border-radius: 8px;
-      background: #2a2a3e;
-      color: #fff;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
       font-size: 1rem;
     }
+
+    input::placeholder {
+      color: var(--text-sub);
+    }
+
     button {
-      padding: 10px 0;
-      background: #4a63d1;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
+      padding: 12px;
       font-size: 1rem;
       font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
       cursor: pointer;
-      transition: background 0.2s ease;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      box-shadow: var(--glow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
     button:hover {
-      background: #3a50b0;
+      transform: scale(1.05);
+      box-shadow: 0 0 20px var(--secondary);
     }
+
     .error {
-      color: #ff4d4d;
+      color: var(--error);
       font-size: 0.95rem;
       text-align: center;
+      margin-bottom: 0.5rem;
     }
+
     .back-link {
-      margin-top: 16px;
       text-align: center;
+      margin-top: 1.25rem;
     }
+
     .back-link a {
-      color: #8ab4f8;
+      color: var(--primary);
+      font-size: 0.9rem;
       text-decoration: none;
-      font-size: 0.95rem;
     }
+
     .back-link a:hover {
       text-decoration: underline;
     }

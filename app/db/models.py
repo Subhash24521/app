@@ -15,6 +15,11 @@ class User(Base):
     reset_token = Column(String, nullable=True)
     reset_token_expires = Column(DateTime, nullable=True)
     is_admin = Column(Boolean, nullable=False, default=False)
+    coins = Column(Integer, default=0)
+    xp = Column(Integer, default=0)
+    level = Column(Integer, default=1)
+    high_score = Column(Integer, default=0)
+    last_daily_claim = Column(DateTime, default=datetime.min)
     # Relationships
     rooms = relationship("GameRoom", back_populates="creator")
     guilds_created = relationship("Guild", back_populates="creator")

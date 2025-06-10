@@ -5,123 +5,101 @@
   <title>Create a New Guild</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0e0e1a;
+      --card: #1a1d2c;
+      --accent: #2d89ef;
+      --primary: #00ffe0;
+      --text: #f5f6fa;
+      --subtext: #b2b6c7;
+    }
+
     body {
       font-family: 'Roboto', sans-serif;
-      background: #0f0f1f;
-      color: #eee;
+      background: var(--bg);
+      color: var(--text);
       max-width: 600px;
-      margin: 2rem auto;
+      margin: 3rem auto;
       padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+      background-color: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 0 24px rgba(0, 255, 255, 0.12);
     }
+
     h1 {
       font-family: 'Orbitron', sans-serif;
       font-size: 2rem;
-      color: #00d9ff;
-      margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1.5rem;
     }
+
     label {
       display: block;
       margin-top: 1.5rem;
       font-weight: bold;
       font-size: 1rem;
-      color: #ccc;
+      color: var(--subtext);
     }
+
     input[type="text"],
-    textarea,
-    select {
+    textarea {
       width: 100%;
-      padding: 0.6rem;
+      padding: 0.7rem;
       margin-top: 0.4rem;
-      box-sizing: border-box;
       border: 1px solid #444;
-      border-radius: 6px;
+      border-radius: 8px;
       background: #1a1a2e;
       color: #eee;
       font-size: 1rem;
     }
-    option {
-      background: #1a1a2e;
-      color: #eee;
-    }
+
     button {
       margin-top: 2rem;
       padding: 0.7rem 1.4rem;
       font-weight: bold;
-      background: linear-gradient(135deg, #00c3ff, #0073ff);
+      background: linear-gradient(135deg, #00c3ff, #2d89ef);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-family: 'Orbitron', sans-serif;
       font-size: 1rem;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+
     button:hover {
-      background: linear-gradient(135deg, #0073ff, #0051cc);
+      transform: scale(1.03);
+      box-shadow: 0 6px 18px rgba(0, 217, 255, 0.25);
     }
+
     .error {
       color: #ff4d4d;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       font-weight: bold;
     }
+
     a {
       display: inline-block;
       margin-top: 2rem;
-      color: #00d9ff;
+      color: var(--primary);
       text-decoration: none;
     }
+
     a:hover {
       text-decoration: underline;
     }
-    .icon-preview {
-      margin-top: 1rem;
-      text-align: center;
-    }
-    .icon-preview img {
-      width: 60px;
-      height: 60px;
-      border-radius: 10px;
-      margin-top: 0.5rem;
-      border: 1px solid #444;
-    }
   </style>
-  <script>
-    function updateIconPreview() {
-      const iconMap = {
-        "dragon": "https://cdn-icons-png.flaticon.com/512/616/616408.png",
-        "lion": "https://cdn-icons-png.flaticon.com/512/1998/1998670.png",
-        "tiger": "https://cdn-icons-png.flaticon.com/512/616/616430.png",
-        "jaguar": "https://cdn-icons-png.flaticon.com/512/616/616436.png"
-      };
-      const select = document.getElementById("icon");
-      const preview = document.getElementById("icon-img");
-      preview.src = iconMap[select.value];
-    }
-  </script>
 </head>
 <body>
   <h1>Create a New Guild</h1>
   <form method="post">
     <label for="name">Guild Name</label>
     <input type="text" id="name" name="name" required maxlength="100" placeholder="e.g. Shadow Jaguars" />
-    
+
     <label for="description">Description (optional)</label>
     <textarea id="description" name="description" rows="4" placeholder="Describe your guild's goals, values, or story..."></textarea>
-
-    <label for="icon">Choose a Guild Icon</label>
-    <select id="icon" name="icon" onchange="updateIconPreview()">
-      <option value="dragon">🐉 Dragon</option>
-      <option value="lion">🦁 Lion</option>
-      <option value="tiger">🐯 Tiger</option>
-      <option value="jaguar">🐆 Jaguar</option>
-    </select>
-
-    <div class="icon-preview">
-      <strong>Icon Preview:</strong><br>
-      <img id="icon-img" src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Icon Preview">
-    </div>
 
     <button type="submit">Create Guild</button>
   </form>
@@ -130,6 +108,6 @@
     <p class="error">{{ error }}</p>
   {% endif %}
 
-  <p><a href="/dashboard">← Back to Dashboard</a></p>
+  <a href="/dashboard">← Back to Dashboard</a>
 </body>
 </html>

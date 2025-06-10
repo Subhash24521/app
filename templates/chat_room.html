@@ -1,56 +1,124 @@
-<!-- templates/chat_room.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Room: {{ room.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #0e0e1a;
+      --glass: rgba(255, 255, 255, 0.06);
+      --primary: #00ffe0;
+      --secondary: #ff00e0;
+      --text-main: #e6faff;
+      --text-sub: #9caec2;
+      --radius: 16px;
+      --glow: 0 0 12px #00ffe0aa;
+    }
+
     body {
-      font-family: sans-serif;
-      background: #1b1b2f;
-      color: #eee;
-      padding: 20px;
+      background: var(--bg);
+      font-family: 'Orbitron', sans-serif;
+      color: var(--text-main);
+      margin: 0;
+      padding: 2rem;
     }
+
     .chat-container {
-      max-width: 800px;
-      margin: 0 auto;
+      max-width: 900px;
+      margin: auto;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--glow);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
+
+    h1 {
+      font-size: 2rem;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      margin: 1rem 0;
+    }
+
     .message {
-      margin-bottom: 12px;
-      padding: 8px 12px;
-      background: #2a2a3f;
-      border-radius: 6px;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 1rem;
+      border-radius: var(--radius);
+      box-shadow: 0 0 8px rgba(0, 255, 224, 0.1);
     }
+
     .message .meta {
-      font-size: 0.85rem;
-      color: #bbb;
+      font-size: 0.9rem;
+      color: var(--text-sub);
       margin-bottom: 4px;
     }
+
     .message .content {
       font-size: 1rem;
     }
+
     form {
-      margin-top: 20px;
+      margin-top: 1.5rem;
       display: flex;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
+
     form input[type="text"] {
       flex: 1;
-      padding: 8px;
+      padding: 0.75rem;
       border: none;
-      border-radius: 4px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-main);
     }
+
+    form input[type="text"]::placeholder {
+      color: var(--text-sub);
+    }
+
     form button {
-      padding: 8px 16px;
-      background: #4a63d1;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: var(--radius);
       cursor: pointer;
+      font-weight: 600;
+      box-shadow: var(--glow);
+      transition: transform 0.2s ease;
     }
+
     form button:hover {
-      background: #3a50b0;
+      transform: scale(1.05);
+      box-shadow: 0 0 18px var(--secondary);
+    }
+
+    .exit-btn {
+      background: #ff4d4d;
+      margin-top: 1rem;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: 0.2s ease-in-out;
+      font-weight: bold;
+    }
+
+    .exit-btn:hover {
+      background: #e04343;
+      box-shadow: 0 0 10px #ff4d4d88;
     }
   </style>
 </head>
@@ -71,7 +139,7 @@
         </div>
       {% endfor %}
     {% else %}
-      <p>No messages yet. Start the conversation!</p>
+      <p style="color: var(--text-sub);">No messages yet. Start the conversation!</p>
     {% endif %}
 
     <form action="/game-chat/{{ room.id }}/chat" method="post">
@@ -85,10 +153,8 @@
       <button type="submit">Send</button>
     </form>
 
-    <form action="/game-chat/{{ room.id }}/exit" method="post" style="margin-top: 16px;">
-      <button type="submit" style="background: #ff4d4d; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
-        Exit Room (delete my messages)
-      </button>
+    <form action="/game-chat/{{ room.id }}/exit" method="post">
+      <button type="submit" class="exit-btn">Exit Room (delete my messages)</button>
     </form>
   </div>
 </body>

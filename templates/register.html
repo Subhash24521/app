@@ -92,10 +92,10 @@
         {% if error %}
             <p class="error">{{ error }}</p>
         {% endif %}
-        <form method="post" class="register-form">
-  <input type="text" name="username" placeholder="Username" required />
-  <input type="email" name="email" placeholder="Email" required />
-  <input type="password" name="password" placeholder="Password" required />
+        <form method="post" class="register-form" action="/register">
+  <input name="username" placeholder="Enter your username" />
+  <input name="email" type="email" placeholder="Enter your email address" />
+  <input name="password" type="password" placeholder="Create a password" />
   <button type="submit">Register</button>
 </form>
 
