@@ -13,6 +13,7 @@ fastapi = "^0.115.2"
 uvicorn = "^0.34.3"
 sqlalchemy = "^2.0.41"
 gunicorn = "^23.0.0"
+python-dotenv = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]
