@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, Integer, String, ForeignKey, Boolean, DateTime, Text, UniqueConstraint
+from sqlalchemy import Column, Date, Integer, String, ForeignKey, Boolean, DateTime, Text, UniqueConstraint, func
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.core.database import Base
@@ -28,7 +28,14 @@ class User(Base):
     guild_messages = relationship("GuildMessage", back_populates="user", cascade="all, delete")
 
 
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
 
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String(20), nullable=False)  # report, review, suggestion, etc.
+    email = Column(String(255), nullable=True)  # optional email
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     
 
 
