@@ -89,6 +89,17 @@
       transform: scale(1.05);
       background: #666;
     }
+      .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -100,6 +111,7 @@
       <button type="submit">Yes, Send Request</button>
       <a href="/friends/list">Cancel</a>
     </form>
+    <a href="/dashboard" class="back-link">← Back to Dashboard</a>
   </div>
 
 </body>

@@ -91,6 +91,18 @@
       color: #777;
       font-style: italic;
     }
+
+       .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -108,6 +120,7 @@
         <li class="no-requests">No friend requests</li>
       {% endfor %}
     </ul>
+    <a href="/dashboard" class="back-link">← Back to Dashboard</a>
   </div>
 </body>
 </html>

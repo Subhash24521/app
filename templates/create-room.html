@@ -47,6 +47,18 @@
   button:hover {
     background-color: #00ccb9;
   }
+    .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
 </style>
 <h1>Create a New Room</h1>
 
@@ -60,7 +72,8 @@
 
   <label for="description">Description (optional)</label>
   <textarea id="description" name="description" rows="4" maxlength="200"></textarea>
-
   <button type="submit">Create Room</button>
+  
 </form>
+<a href="/dashboard" class="back-link">← Back to Dashboard</a>
 {% endblock %}

@@ -154,6 +154,18 @@
         display: none;
       }
     }
+
+     .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -193,6 +205,7 @@
         Select a friend to start chatting.
       </div>
     {% endif %}
+    <a href="/dashboard" class="back-link">← Back to Dashboard</a>
   </main>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
+from fastapi import APIRouter, Depends, Request, Form, HTTPException,status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -146,3 +146,27 @@ def snake_ladder_game(request: Request):
 @router.get("/games/carrom", response_class=HTMLResponse)
 def carrom_game(request: Request):
     return templates.TemplateResponse("carrom.html", {"request": request})
+
+
+# routers/contact.py
+
+
+
+
+
+@router.get("/contact")
+def contact_form(request: Request):
+    return templates.TemplateResponse("contact.html", {"request": request})
+
+@router.post("/contact")
+def submit_contact(
+    request: Request,
+    type: str = Form(...),
+    email: str = Form(""),
+    message: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    contact = models.ContactMessage(type=type, email=email, message=message)
+    db.add(contact)
+    db.commit()
+    return RedirectResponse("/contact", status_code=status.HTTP_302_FOUND)

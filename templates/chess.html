@@ -59,11 +59,23 @@
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
     }
+       .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
 </style>
 
 </head>
 <body>
     <h1>Welcome to Chess</h1>
     <p>Coming soon: Online multiplayer chess!</p>
+    <a href="/game-room" class="back-link">← Back to Game-Room</a>
 </body>
 </html>

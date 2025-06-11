@@ -59,11 +59,24 @@
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+      .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
 </style>
 
 </head>
 <body>
     <h1>Welcome to Carrom</h1>
     <p>Strike and pocket your way to victory!</p>
+    <a href="/game-room" class="back-link">← Back to Game-Room</a>
 </body>
 </html>

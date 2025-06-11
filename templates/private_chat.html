@@ -82,6 +82,17 @@
     color: #ffffff;
     box-shadow: 0 0 18px #00fff7;
   }
+    .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
 </style>
 
 <h2>Private Chat with {{ friend.username }}</h2>
@@ -90,6 +101,7 @@
   {% for msg in messages %}
     <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
   {% endfor %}
+   <a href="/dashboard" class="back-link">← Back to Dashboard</a>
 </div>
 
 <form method="post" action="/chat/private/{{ friend.id }}">
