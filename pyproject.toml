@@ -10,7 +10,7 @@ packages = [{ include = "app" }]
 [tool.poetry.dependencies]
 python = ">=3.11,<4.0"
 fastapi = "^0.115.2"
-uvicorn = "^0.34.3"
+uvicorn = {extras = ["standard"], version = "^0.34.3"}
 sqlalchemy = "^2.0.41"
 gunicorn = "^23.0.0"
 python-dotenv = "^1.1.0"
