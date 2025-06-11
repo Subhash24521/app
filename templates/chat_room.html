@@ -133,7 +133,7 @@
       {% for msg in messages %}
         <div class="message">
           <div class="meta">
-            <strong>{{ msg.sender.username }}</strong>
+            <strong>{{ msg.sender.full_name }}</strong>
             &middot; {{ msg.timestamp.strftime("%Y-%m-%d %H:%M UTC") }}
           </div>
           <div class="content">{{ msg.content }}</div>

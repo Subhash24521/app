@@ -251,7 +251,7 @@
     <div class="chat-box">
       {% for msg in messages %}
         <div class="chat-msg">
-          <strong>{{ msg.user.username }}</strong>: {{ msg.content }}<br>
+          <strong>{{ msg.user.full_name }}</strong>: {{ msg.content }}<br>
           <span class="meta">{{ msg.timestamp.strftime('%Y-%m-%d %H:%M') }}</span>
         </div>
       {% endfor %}
@@ -268,7 +268,7 @@
     <div class="member-list">
       {% for member in members %}
         <div class="member">
-          {{ member.user.username }}
+          {{ member.user.full_name }}
           <span class="role-tag">{{ member.role }}</span>
 
           {# — Only Founder can promote/demote — #}
@@ -353,7 +353,7 @@
         <div class="request-list">
           {% for req in join_requests %}
             <div class="request">
-              {{ req.username }}
+              {{ req.full_name }}
               <div class="actions">
                 <form
                   method="post"

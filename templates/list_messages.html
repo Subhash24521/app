@@ -176,7 +176,7 @@
     {% for u in users %}
       <a href="/private-messages/?friend_id={{ u.id }}"
          class="friend {% if selected_user and selected_user.id == u.id %}active{% endif %}">
-        {{ u.username }}
+        {{ u.full_name }}
       </a>
     {% endfor %}
     {% if not users %}

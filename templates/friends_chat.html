@@ -111,7 +111,7 @@
     <ul>
       {% for request in requests %}
         <li>
-          <p>From: <strong>{{ request.from_username }}</strong></p>
+          <p>From: <strong>{{ request.from_full_name }}</strong></p>
           <form method="post" action="/friends/accept/{{ request.id }}">
             <button type="submit">Accept</button>
           </form>

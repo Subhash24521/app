@@ -213,17 +213,17 @@
     {% if friends %}
       <ul class="friends-list">
         {% for friend in friends %}
-          {% set parts = friend.username.split(" ") %}
+          {% set parts = friend.full_name.split(" ") %}
           {% if parts|length >= 2 %}
             {% set initials = (parts[0][0] + parts[1][0]).upper() %}
           {% else %}
-            {% set initials = friend.username[:2].upper() %}
+            {% set initials = friend.full_name[:2].upper() %}
           {% endif %}
 
           <li class="friend-item">
             <div class="friend-info">
               <div class="friend-avatar">{{ initials }}</div>
-              <div class="friend-name">{{ friend.username }}</div>
+              <div class="friend-name">{{ friend.full_name }}</div>
             </div>
             <div class="actions">
               <a href="/private-messages/">

@@ -111,7 +111,8 @@
       <a href="/game-room/{{ room.id }}" class="room-link" aria-label="Enter room {{ room.name }}">
         <div class="room-card">
           <div class="room-icon">🎮</div>
-          <div class="room-name">{{ room.name }}</div>
+          <div class="room-name">{{ room.name }} </div>
+          <div class="room-name">{{ user.full_name }}</div>
         </div>
       </a>
     {% endfor %}

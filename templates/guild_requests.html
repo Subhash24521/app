@@ -10,7 +10,7 @@
     <ul>
       {% for r in requests %}
         <li>
-          {{ r.username }}
+          {{ r.full_name }}
           <form method="post" action="/guilds/{{ guild.id }}/requests/{{ r.user_id }}/approve" style="display:inline;">
             <button>Approve</button>
           </form>

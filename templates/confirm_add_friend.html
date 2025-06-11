@@ -106,7 +106,7 @@
 
   <div class="confirmation-container">
     <h2>👾 Confirm Add Friend</h2>
-    <p>Do you want to send a friend request to <strong>{{ friend.username }}</strong>?</p>
+    <p>Do you want to send a friend request to <strong>{{ friend.full_name }}</strong>?</p>
     <form method="post" action="/friends/add/{{ friend.id }}">
       <button type="submit">Yes, Send Request</button>
       <a href="/friends/list">Cancel</a>

@@ -8,7 +8,7 @@
   <h1>Guild: {{ guild.name }}</h1>
   <p>Description: {{ guild.description or "No description" }}</p>
 
-  <p>Hello, {{ user.username }}!</p>
+  <p>Hello, {{ user.full_name }}!</p>
 
   <form method="post" action="/guilds/{{ guild.id }}/request_join">
     <button type="submit">Request to Join Guild</button>
