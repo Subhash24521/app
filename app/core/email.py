@@ -8,7 +8,7 @@ def send_reset_email(to_email: str, token: str):
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to_email
 
-    reset_link = f"https://piano-app-sd6h.onrender.com/reset-password?token={token}"
+    reset_link = f"https://piano-app-q7f6.onrender.com/reset-password?token={token}"
     msg.set_content(f"Click this link to reset your password:\n{reset_link}")
 
     try:

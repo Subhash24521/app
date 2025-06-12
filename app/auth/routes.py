@@ -65,20 +65,23 @@ def login_user(
     user = db.query(User).filter(or_(User.username == username, User.email == username)).first()
     if not user or not pwd_context.verify(password, user.hashed_password):
         return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid username or password"})
-    
+
     token = create_access_token(
         data={"sub": user.username},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
+    
     response = RedirectResponse(url="/dashboard", status_code=302)
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
         samesite="lax",
-        secure=IS_RENDER
+        secure=IS_RENDER,
+        max_age=60 * 60 * 24 * 7  # 7 days
     )
     return response
+
 
 
 @router.get("/logout")
