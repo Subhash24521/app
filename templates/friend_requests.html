@@ -148,15 +148,15 @@
       {% for request in requests %}
         <li>
           <p>From: <strong>{{ request.from_full_name }}</strong></p>
-          <form method="post" action="/friends/accept/{{ request.id }}">
-            <button type="submit">Accept</button>
-          </form>
+            <form method="post" action="/friends/accept/{{ req.id }}" style="display:inline;">
+          <button type="submit">Accept</button>
+        </form>
         </li>
       {% else %}
         <li class="no-requests">No friend requests</li>
       {% endfor %}
     </ul>
+    <a href="/dashboard" class="back-link">← Back to Dashboard</a>
   </div>
-<a href="/dashboard" class="back-link">← Back to Dashboard</a>
 </body>
 </html>

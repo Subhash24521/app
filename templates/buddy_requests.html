@@ -1,0 +1,18 @@
+<!-- buddy_requests.html -->
+<h2>Incoming Buddy Requests</h2>
+
+{% if buddy_requests %}
+  {% for req in buddy_requests %}
+    <div class="request-card">
+      <p>{{ req.sender.username }} wants to buddy with you.</p>
+      <form method="post" action="/buddy-request/{{ req.id }}/accept">
+        <button type="submit">Accept</button>
+      </form>
+      <form method="post" action="/buddy-request/{{ req.id }}/reject">
+        <button type="submit">Reject</button>
+      </form>
+    </div>
+  {% endfor %}
+{% else %}
+  <p>No pending requests.</p>
+{% endif %}

@@ -20,12 +20,34 @@ class User(Base):
     level = Column(Integer, default=1)
     high_score = Column(Integer, default=0)
     last_daily_claim = Column(DateTime, default=datetime.min)
+    user_code = Column(String, unique=True, index=True)
+    buddy_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    buddy = relationship("User", remote_side=[id], uselist=False)
     # Relationships
     rooms = relationship("GameRoom", back_populates="creator")
-    guilds_created = relationship("Guild", back_populates="creator")
+    guilds_created = relationship(
+    "Guild",
+    back_populates="creator",
+    foreign_keys="[Guild.created_by]"
+)
+    
     guild_memberships = relationship("GuildMember", back_populates="user")
     private_messages = relationship("Message", back_populates="sender")  # renamed
     guild_messages = relationship("GuildMessage", back_populates="user", cascade="all, delete")
+    guild_id = Column(Integer, ForeignKey("guilds.id"), nullable=True)
+    guild = relationship("Guild", back_populates="users_in_guild", foreign_keys=[guild_id])
+
+
+class BuddyRequest(Base):
+    __tablename__ = "buddy_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))
+    status = Column(String, default="pending")  # pending / accepted / rejected
+    created_at = Column(DateTime, default=datetime.utcnow)
+    sender = relationship("User", foreign_keys=[sender_id], backref="sent_buddy_requests")
+    receiver = relationship("User", foreign_keys=[receiver_id], backref="received_buddy_requests")
 
 
 class ContactMessage(Base):
@@ -37,6 +59,18 @@ class ContactMessage(Base):
     message = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
+
+class Block(Base):
+    __tablename__ = "blocks"
+
+    id = Column(Integer, primary_key=True)
+    blocker_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    blocked_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    UniqueConstraint('blocker_id', 'blocked_id', name='unique_block_pair')
+
+    blocker = relationship("User", foreign_keys=[blocker_id])
+    blocked = relationship("User", foreign_keys=[blocked_id])
 
 
 class GameRoom(Base):
@@ -88,7 +122,12 @@ class Guild(Base):
     creator = relationship("User", back_populates="guilds_created")
     members = relationship("GuildMember", back_populates="guild", cascade="all, delete")
     messages = relationship("GuildMessage", back_populates="guild", cascade="all, delete")
-
+    creator = relationship(
+        "User",
+        back_populates="guilds_created",
+        foreign_keys=[created_by]
+    )
+    users_in_guild = relationship("User", back_populates="guild", foreign_keys="[User.guild_id]")
 
 
 class GuildMember(Base):

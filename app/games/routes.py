@@ -170,3 +170,62 @@ def submit_contact(
     db.add(contact)
     db.commit()
     return RedirectResponse("/contact", status_code=status.HTTP_302_FOUND)
+
+@router.post("/game-chat/{room_id}/kick/{user_id}")
+def kick_user_from_room(
+    room_id: int,
+    user_id: int,
+    current_user: models.User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    room = db.query(models.GameRoom).filter(models.GameRoom.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    if room.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the room owner can kick users")
+
+    participant = db.query(models.GameRoomUser).filter_by(user_id=user_id, room_id=room_id).first()
+    if not participant:
+        raise HTTPException(status_code=404, detail="User is not in the room")
+
+    # Send system message before removal
+    system_message = models.Message(
+        room_id=room_id,
+        sender_id=None,  # None or a dedicated "system user" ID
+        content=f"User {participant.user.full_name} was kicked out by the room owner.",
+        timestamp=datetime.utcnow()
+    )
+    db.add(system_message)
+
+    # Optionally: notify the user directly if you have user-specific inbox or alerts
+    # (e.g., insert to Notification table)
+
+    db.delete(participant)
+    db.commit()
+
+    return RedirectResponse(url=f"/game-chat/{room_id}/chat", status_code=303)
+
+
+@router.post("/game-chat/{room_id}/invite")
+def invite_user_to_room(
+    room_id: int,
+    invited_user_id: int = Form(...),
+    current_user: models.User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    room = db.query(models.GameRoom).filter(models.GameRoom.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    if room.created_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the owner can invite users")
+
+    # Check if already in room
+    exists = db.query(models.GameRoomUser).filter_by(user_id=invited_user_id, room_id=room_id).first()
+    if exists:
+        raise HTTPException(status_code=400, detail="User already in room")
+
+    new_participant = models.GameRoomUser(user_id=invited_user_id, room_id=room_id)
+    db.add(new_participant)
+    db.commit()
+
+    return RedirectResponse(url=f"/game-chat/{room_id}/chat", status_code=303)

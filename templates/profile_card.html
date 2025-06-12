@@ -1,0 +1,204 @@
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #0f0f0f;
+      font-family: 'Orbitron', sans-serif;
+      color: #f8f8f8;
+    }
+
+    .profile-card {
+      background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+      border: 2px solid #00ffe7;
+      border-radius: 16px;
+      padding: 24px;
+      width: 420px;
+      margin: 40px auto;
+      box-shadow: 0 0 20px #00ffe7aa, 0 0 40px #00bcd4;
+      transition: all 0.3s ease;
+    }
+
+    .profile-card:hover {
+      box-shadow: 0 0 30px #00ffe7cc, 0 0 60px #00bcd4aa;
+    }
+
+    .profile-card h3 {
+      color: #00ffe7;
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+
+    .profile-card p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #e0e0e0;
+    }
+
+    .paired-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .paired-section img {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid #00ffe7;
+      margin: 0 10px;
+      box-shadow: 0 0 10px #00ffe7aa;
+    }
+
+    form {
+      margin: 8px 0;
+      text-align: center;
+    }
+
+    button {
+      background-color: #00ffe7;
+      color: #0f0f0f;
+      border: none;
+      padding: 10px 16px;
+      min-width: 140px;
+      font-weight: bold;
+      border-radius: 10px;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+      transition: 0.3s ease;
+      box-shadow: 0 0 10px #00ffe7;
+    }
+
+    button:hover {
+      background-color: #00bcd4;
+      transform: scale(1.05);
+    }
+
+    .block-btn {
+      background-color: #ff0055;
+      box-shadow: 0 0 10px #ff0055;
+      color: #fff;
+    }
+
+    .block-btn:hover {
+      background-color: #cc0044;
+    }
+
+    .unblock-btn {
+      background-color: #ffa500;
+      box-shadow: 0 0 10px #ffa500;
+      color: #fff;
+    }
+
+    .unblock-btn:hover {
+      background-color: #cc8500;
+    }
+
+    .add-buddy-btn {
+      background-color: #00ff88;
+      box-shadow: 0 0 10px #00ff88;
+    }
+
+    .add-buddy-btn:hover {
+      background-color: #00cc6a;
+    }
+
+    hr {
+      border-color: #00ffe755;
+      margin: 12px 0;
+    }
+
+    .buddy-btn {
+  background-color: #00ff88;
+  color: #0f0f0f;
+  box-shadow: 0 0 10px #00ff88aa;
+  font-weight: bold;
+}
+
+.buddy-btn:hover {
+  background-color: #00cc6a;
+  transform: scale(1.05);
+}
+
+.unbuddy-btn {
+  background-color: #ff3366;
+  color: white;
+  box-shadow: 0 0 10px #ff3366aa;
+}
+
+.unbuddy-btn:hover {
+  background-color: #cc294f;
+}
+
+.request-action-btn {
+  margin: 5px 4px;
+  min-width: 110px;
+}
+
+  </style>
+</head>
+
+<div class="profile-card">
+ {% if user %}
+  <h3>{{ user.username }} <small>(ID: {{ user.user_code or "N/A" }})</small></h3>
+  <p>📝 Signature: {{ user.bio or "No bio" }}</p>
+  <p>🏰 Guild: {{ user.guild or "No guild" }}</p>
+  <p>🎖️ Level: Lv.{{ user.level or 1 }}</p>
+<div class="status">
+  {% if user.online %}
+    <span class="online">Status: Online</span>
+  {% else %}
+    <span class="offline">Status : Offline</span>
+  {% endif %}
+</div>
+
+  {% if buddy %}
+    <div class="paired-section">
+      <img src="{{ user.avatar_url or '/static/default-avatar.png' }}">
+      <img src="{{ buddy.avatar_url or '/static/default-avatar.png' }}">
+    </div>
+    <p style="text-align: center;">❤️ Paired with {{ buddy.full_name }}</p>
+  {% endif %}
+
+  <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px;">
+    {% if not current_user.buddy_id and not viewed_user.buddy_id %}
+      {% set request_sent = viewed_user.received_buddy_requests | selectattr("sender_id", "equalto", current_user.id) | list | length > 0 %}
+      {% if not request_sent %}
+        <form action="/buddy/send/{{ viewed_user.id }}" method="post">
+          <button type="submit" class="buddy-btn">💌 Send Buddy Request</button>
+        </form>
+      {% else %}
+        <p>✅ Buddy request sent.</p>
+      {% endif %}
+    {% endif %}
+
+    {% if buddy %}
+      <form method="post" action="/unbuddy">
+        <button type="submit" class="block-btn">💔 Unbuddy</button>
+      </form>
+    {% endif %}
+
+    {% if user.id %}
+      <form method="post" action="/friends/add-friend/{{ user.id }}">
+        <button type="submit">➕ Add Friend</button>
+      </form>
+    {% endif %}
+
+    {% if is_blocked %}
+      <form method="post" action="/unblock/{{ user.id }}">
+        <button type="submit" class="unblock-btn">🔓 UNBLOCK</button>
+      </form>
+    {% else %}
+      <form method="post" action="/block/{{ user.id }}">
+        <button type="submit" class="block-btn">🚫 BLOCK</button>
+      </form>
+    {% endif %}
+  </div>
+
+{% else %}
+  <p>Error: User not found or invalid.</p>
+{% endif %}
+
+</div>
+
+   

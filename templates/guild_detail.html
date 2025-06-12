@@ -248,6 +248,27 @@
   <!-- Guild Chat Left -->
   <div class="left-column">
     <h2>Guild Chat</h2>
+    <!-- Guild Name and Description -->
+<div style="margin-bottom: 2rem;">
+  <h2>{{ guild.name }}</h2>
+
+  {% if current_user.id == guild.created_by %}
+    <!-- Editable description form for Founder -->
+    <form method="post" action="/guilds/{{ guild.id }}/edit_description" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem;">
+      <textarea
+        name="description"
+        rows="3"
+        required
+        style="background: #1f1f2e; color: #ccc; border: none; border-radius: 8px; padding: 0.6rem 1rem; font-size: 1rem;"
+      >{{ guild.description }}</textarea>
+      <button type="submit" class="btn-accent" style="align-self: flex-start;">Update Description</button>
+    </form>
+  {% else %}
+    <!-- Read-only description for others -->
+    <p style="color: var(--text-light); font-size: 0.95rem; margin-top: 0.5rem;">{{ guild.description }}</p>
+  {% endif %}
+</div>
+
     <div class="chat-box">
       {% for msg in messages %}
         <div class="chat-msg">
@@ -338,7 +359,7 @@
         onsubmit="return confirm('Disband this guild? This is permanent.');"
         style="margin-top: 1rem;"
       >
-        <button type="submit" class="danger">Disband Guild</button>
+        <button type="submit" class="danger">Exit Guild</button>
       </form>
     {% elif user_role != "Founder" %}
       <form method="post" action="/guilds/{{ guild.id }}/leave" style="margin-top: 1rem;">

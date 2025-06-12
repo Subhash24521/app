@@ -1,0 +1,92 @@
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+
+<style>
+    body {
+    background-color: #0e0e1a;
+    font-family: 'Orbitron', sans-serif;
+    color: #f0f0f0;
+}
+
+.title {
+    text-align: center;
+    font-size: 2rem;
+    color: #00ffff;
+    text-shadow: 0 0 8px #00ffff;
+    margin-bottom: 20px;
+}
+
+.user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    justify-items: center;
+}
+
+.user-card {
+    text-decoration: none;
+    color: white;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.user-icon {
+    background: linear-gradient(135deg, #0ff, #00f);
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 0 15px #00ffff88;
+    text-align: center;
+    width: 100px;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: transform 0.3s;
+}
+.user-icon p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+
+.user-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px #00ffffcc;
+}
+
+.user-icon img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin: 0 auto 8px auto;
+    border: 2px solid #00ffff;
+}
+
+.user-icon p {
+    font-size: 0.9rem;
+    text-shadow: 0 0 5px #00ffff;
+}
+  .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+</style>
+<h2 class="title">👾 All Players</h2>
+<div class="user-grid">
+    {% for user in users %}
+    <a href="/user/{{ user.id }}" class="user-card">
+        <div class="user-icon">
+            <img src="{{ user.avatar_url or '/static/default-avatar.png' }}" alt="avatar" />
+            <p>{{ user.username }}</p>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+<a href="/dashboard" class="back-link">← Back to Dashboard</a>

@@ -45,68 +45,35 @@ def add_friend_form(request: Request):
     """
     return templates.TemplateResponse("add_friend.html", {"request": request, "error": None})
 
-
-@router.post("/add")
-def add_friend(
-    request: Request,
-    friend_username: str = Form(...),
+@router.post("/add-by-code")
+def add_friend_by_code(
+    user_code: str = Form(...),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_cookie)
 ):
-    """
-    Handle the “add friend” form POST. We only create a new Friendship if:
-      - friend_username matches a real user (and is not the current user)
-      - there is no existing Friendship row (pending or accepted) between them
-    Otherwise, re-render the form with an error message.
-    """
-    friend_username = friend_username.strip()
+    user_code = user_code.strip()
 
-    # 1. Check that the entered username exists and is not the current user
-    friend = db.query(models.User).filter(models.User.username == friend_username).first()
+    friend = db.query(models.User).filter(models.User.user_code == user_code).first()
     if not friend or friend.id == current_user.id:
-        # Username not found or user tried to add themselves
-        error_msg = "User not found."
-        return templates.TemplateResponse(
-            "add_friend.html",
-            {"request": request, "error": error_msg}
-        )
+        raise HTTPException(status_code=400, detail="Invalid user code.")
 
-    # 2. Check for any existing Friendship (either direction, accepted or not)
-    existing = (
-        db.query(models.Friendship)
-        .filter(
-            or_(
-                (models.Friendship.user_id == current_user.id) & (models.Friendship.friend_id == friend.id),
-                (models.Friendship.user_id == friend.id) & (models.Friendship.friend_id == current_user.id)
-            )
+    existing = db.query(models.Friendship).filter(
+        or_(
+            (models.Friendship.user_id == current_user.id) & (models.Friendship.friend_id == friend.id),
+            (models.Friendship.user_id == friend.id) & (models.Friendship.friend_id == current_user.id)
         )
-        .first()
-    )
+    ).first()
 
     if existing:
-        if existing.accepted:
-            error_msg = "You are already friends with “{}”.".format(friend_username)
-        else:
-            # There is a pending request in one direction
-            if existing.user_id == current_user.id:
-                error_msg = f"You have already sent a friend request to “{friend_username}.”"
-            else:
-                error_msg = f"“{friend_username}” has already sent you a friend request."
-        return templates.TemplateResponse(
-            "add_friend.html",
-            {"request": request, "error": error_msg}
-        )
+        raise HTTPException(status_code=400, detail="Friend request already exists.")
 
-    # 3. Otherwise, everything is valid: create a new (pending) friendship
-    new_friendship = models.Friendship(
+    db.add(models.Friendship(
         user_id=current_user.id,
         friend_id=friend.id,
         accepted=False
-    )
-    db.add(new_friendship)
+    ))
     db.commit()
 
-    # Redirect back to the friends list (or requests page)
     return RedirectResponse("/friends/list", status_code=303)
 
 
@@ -116,10 +83,6 @@ def friend_requests(
     user: models.User = Depends(get_current_user_from_cookie),
     db: Session = Depends(get_db)
 ):
-    """
-    Show all pending friend requests where current_user is the “friend_id”
-    and accepted == False.
-    """
     Requester = aliased(models.User)
     pending = (
         db.query(models.Friendship)
@@ -131,19 +94,20 @@ def friend_requests(
         .all()
     )
 
-    # Build a simple list for the template
     request_data = []
     for friendship in pending:
         from_user = db.query(models.User).get(friendship.user_id)
         request_data.append({
             "id": friendship.id,
-            "from_username": from_user.username
+            "from_username": from_user.username,
+            "from_user_code": from_user.user_code  # <== Add this
         })
 
     return templates.TemplateResponse(
         "friend_requests.html",
         {"request": request, "requests": request_data}
     )
+
 
 
 @router.post("/accept/{friendship_id}")
@@ -215,3 +179,36 @@ def unfriend(
     db.commit()
 
     return RedirectResponse("/friends/list", status_code=303)
+
+@router.post("/add-friend/{user_id}")
+def add_friend_by_id(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_cookie)
+):
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="You cannot add yourself.")
+
+    friend = db.query(models.User).filter(models.User.id == user_id).first()
+    if not friend:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    # Check if friendship already exists
+    existing = db.query(models.Friendship).filter(
+        or_(
+            (models.Friendship.user_id == current_user.id) & (models.Friendship.friend_id == friend.id),
+            (models.Friendship.user_id == friend.id) & (models.Friendship.friend_id == current_user.id)
+        )
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Friend request already exists.")
+
+    new_friendship = models.Friendship(
+        user_id=current_user.id,
+        friend_id=friend.id,
+        accepted=False
+    )
+    db.add(new_friendship)
+    db.commit()
+    return RedirectResponse(f"/user/{user_id}", status_code=303)

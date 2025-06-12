@@ -1,8 +1,10 @@
+from fastapi import Request,Depends
 from fastapi import APIRouter, Cookie, Depends, Request, Form, HTTPException, File, UploadFile
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from app.core.deps import get_current_user_from_cookie as get_current_user
 from jose import JWTError, jwt
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
@@ -12,7 +14,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.deps import get_current_user_from_cookie
-from app.db.models import User
+from app.db.models import Block, BuddyRequest, Friendship, Guild, User
 import os
 import shutil
 import uuid
@@ -28,7 +30,6 @@ AVATAR_DIR = "static/avatars"
 def register_form(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
-
 @router.post("/register")
 def register_user(
     request: Request,
@@ -43,11 +44,24 @@ def register_user(
             "request": request,
             "error": "Username or email already exists"
         })
+
     hashed_password = pwd_context.hash(password)
-    new_user = User(username=username, email=email, hashed_password=hashed_password)
+
+    # Generate new user code (e.g., U0001, U0002...)
+    last_user = db.query(User).order_by(User.id.desc()).first()
+    next_id = (last_user.id + 1) if last_user else 1
+    user_code = f"U{next_id:04d}"
+
+    new_user = User(
+        username=username,
+        email=email,
+        hashed_password=hashed_password,
+        user_code=user_code
+    )
     db.add(new_user)
     db.commit()
     return RedirectResponse(url="/", status_code=302)
+
 
 
 @router.get("/")
@@ -95,12 +109,14 @@ def logout():
 def dashboard(request: Request, user: User = Depends(get_current_user_from_cookie)):
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
-        "user": user,
+        "current_user": user,
+          "user": user,  
         "coins": user.coins,
         "level": user.level,
         "xp": user.xp,
-        "high_score": user.high_score
+        "high_score": user.high_score,
     })
+
 
 
 
@@ -237,3 +253,200 @@ def add_xp(user: User, db: Session, xp_amount: int):
         user.xp -= user.level * 100
         user.level += 1
     db.commit()
+
+
+@router.post("/pair-buddy/{user_id}")
+def pair_buddy(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie)
+):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot buddy yourself.")
+
+    buddy_user = db.query(User).filter(User.id == user_id).first()
+    if not buddy_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    if current_user.buddy_id:
+        raise HTTPException(status_code=400, detail="You already have a buddy.")
+
+    if buddy_user.buddy_id:
+        raise HTTPException(status_code=400, detail="This user is already paired.")
+
+    # Set buddy both ways
+    current_user.buddy_id = buddy_user.id
+    buddy_user.buddy_id = current_user.id
+    db.commit()
+
+    return RedirectResponse(f"/user/{user_id}", status_code=303)
+
+@router.post("/unbuddy")
+def unbuddy(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    if not current_user.buddy_id:
+        raise HTTPException(status_code=400, detail="You don't have a buddy.")
+
+    buddy = db.query(User).filter(User.id == current_user.buddy_id).first()
+    if not buddy:
+        raise HTTPException(status_code=404, detail="Buddy not found.")
+
+    # Unset both users' buddy_id
+    current_user.buddy_id = None
+    buddy.buddy_id = None
+    db.commit()
+
+    return RedirectResponse(f"/user/{buddy.id}", status_code=303)
+@router.post("/buddy/send/{receiver_id}")
+def send_buddy_request(
+    receiver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie)
+):
+    if current_user.id == receiver_id:
+        raise HTTPException(status_code=400, detail="Cannot buddy yourself.")
+    
+    receiver = db.query(User).filter(User.id == receiver_id).first()
+    if not receiver:
+        raise HTTPException(status_code=404, detail="User not found.")
+    
+    if current_user.buddy_id or receiver.buddy_id:
+        raise HTTPException(status_code=400, detail="One of the users already has a buddy.")
+
+    existing_request = db.query(BuddyRequest).filter_by(sender_id=current_user.id, receiver_id=receiver_id).first()
+    if existing_request:
+        raise HTTPException(status_code=400, detail="Buddy request already sent.")
+
+    buddy_request = BuddyRequest(sender_id=current_user.id, receiver_id=receiver_id)
+    db.add(buddy_request)
+    db.commit()
+    return {"message": "Buddy request sent."}
+
+
+@router.post("/buddy/accept/{sender_id}")
+def accept_buddy_request(
+    sender_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie)
+):
+    req = db.query(BuddyRequest).filter_by(sender_id=sender_id, receiver_id=current_user.id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Buddy request not found.")
+    
+    sender = db.query(User).filter(User.id == sender_id).first()
+    if not sender:
+        raise HTTPException(status_code=404, detail="Sender not found.")
+
+    if current_user.buddy_id or sender.buddy_id:
+        raise HTTPException(status_code=400, detail="One of the users already has a buddy.")
+
+    current_user.buddy_id = sender.id
+    sender.buddy_id = current_user.id
+    db.delete(req)
+    db.commit()
+
+    return {"message": "You are now buddies!"}
+
+
+@router.post("/buddy/reject/{sender_id}")
+def reject_buddy_request(
+    sender_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie)
+):
+    req = db.query(BuddyRequest).filter_by(sender_id=sender_id, receiver_id=current_user.id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="Buddy request not found.")
+
+    db.delete(req)
+    db.commit()
+
+    return {"message": "Buddy request rejected."}
+
+
+@router.get("/buddy-requests", response_class=HTMLResponse)
+def view_buddy_requests(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    requests = db.query(BuddyRequest).filter(
+        BuddyRequest.receiver_id == current_user.id,
+        BuddyRequest.status == "pending"
+    ).all()
+    return templates.TemplateResponse("buddy_requests.html", {
+        "request": Request,
+        "buddy_requests": requests,
+        "current_user": current_user
+    })
+
+
+@router.get("/users")
+def get_all_users(request: Request, db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return templates.TemplateResponse("user_list.html", {"request": request, "users": users})
+
+@router.get("/user/{user_id}")
+def view_profile(
+    request: Request,
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    viewed_user = db.query(User).filter(User.id == user_id).first()
+    if not viewed_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Get the buddy of the viewed user, if any
+    buddy = None
+    if viewed_user.buddy_id:
+        buddy = db.query(User).filter(User.id == viewed_user.buddy_id).first()
+
+    # Optional: check if current user has blocked this user
+    is_blocked = False  # implement your block check logic
+
+    return templates.TemplateResponse("profile_card.html", {
+        "request": request,
+        "user": viewed_user,
+        "buddy": buddy,
+        "current_user": current_user,
+        "viewed_user": viewed_user,
+        "is_blocked": is_blocked,
+    })
+
+
+
+
+
+@router.post("/block/{blocked_id}")
+def block_user(blocked_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user_from_cookie)):
+    if blocked_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You can't block yourself.")
+    
+    already_blocked = db.query(Block).filter_by(blocker_id=current_user.id, blocked_id=blocked_id).first()
+    if already_blocked:
+        raise HTTPException(status_code=400, detail="User already blocked.")
+    
+    block = Block(blocker_id=current_user.id, blocked_id=blocked_id)
+    db.add(block)
+    db.commit()
+    return RedirectResponse(url=f"/user/{blocked_id}", status_code=303)
+
+@router.post("/unblock/{blocked_id}")
+def unblock_user(blocked_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user_from_cookie)):
+    block = db.query(Block).filter_by(blocker_id=current_user.id, blocked_id=blocked_id).first()
+    if not block:
+        raise HTTPException(status_code=404, detail="User not blocked.")
+    
+    db.delete(block)
+    db.commit()
+    return RedirectResponse(url=f"/user/{blocked_id}", status_code=303)
+
+
+
+@router.get("/users")
+def show_users(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    blocked_ids = db.query(Block.blocked_id).filter_by(blocker_id=current_user.id).subquery()
+    users = db.query(User).filter(User.id.notin_(blocked_ids)).all()
+    return templates.TemplateResponse("user_list.html", {"request": request, "users": users})

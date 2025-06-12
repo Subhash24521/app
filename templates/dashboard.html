@@ -218,6 +218,7 @@
 </div>
       <div class="user-info">
         <div class="username">{{ user.full_name }}</div>
+        <div class="username">Id {{ user.user_code  }}</div>
         <div class="level">Level {{ user.level }}</div>
         <div class="level-bar"><div class="progress"></div></div>
         <div style="margin-top: 1rem;">
@@ -268,7 +269,22 @@
 
   <div class="panel">
     <h2>Main Area</h2>
-    <p>Customize this section to show live rooms, upcoming events, news, friends, or guild messages.</p>
+{% if current_user.received_buddy_requests %}
+  <hr />
+  <h3>Incoming Buddy Requests</h3>
+  {% for req in current_user.received_buddy_requests %}
+    <div style="text-align: center;">
+      <p><strong>{{ req.sender.full_name }}</strong></p>
+      <form action="/buddy/accept/{{ req.sender_id }}" method="post" style="display: inline;">
+        <button type="submit" class="buddy-btn request-action-btn">✅ Accept</button>
+      </form>
+      <form action="/buddy/reject/{{ req.sender_id }}" method="post" style="display: inline;">
+        <button type="submit" class="block-btn request-action-btn">❌ Reject</button>
+      </form>
+    </div>
+  {% endfor %}
+{% endif %}
+
   </div>
 </div>
 {% endblock %}

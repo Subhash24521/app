@@ -117,15 +117,11 @@
       <div class="error">{{ error }}</div>
     {% endif %}
 
-    <form action="/friends/add" method="post">
-      <input
-        type="text"
-        name="friend_username"
-        placeholder="Enter username"
-        required
-      />
-      <button type="submit">Send Friend Request</button>
-    </form>
+    <form method="post" action="/friends/add-by-code">
+  <input type="text" name="user_code" placeholder="Enter User Code">
+  <button type="submit">Add Friend by Code</button>
+</form>
+
 
     <div class="back-link">
       <a href="/friends/list">← Back to Friends List</a>
