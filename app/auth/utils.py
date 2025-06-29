@@ -2,6 +2,10 @@ from app.core.security import get_password_hash, verify_password, create_access_
 from datetime import timedelta
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.db.models import Block
+from fastapi import HTTPException, status
+
+import jwt  # From PyJWT
+from jwt.exceptions import DecodeError, ExpiredSignatureError, InvalidTokenError
 
 def authenticate_user(db, username: str, password: str):
     user = db.query(db.models.User).filter_by(username=username).first()
