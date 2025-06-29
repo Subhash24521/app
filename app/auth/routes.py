@@ -1,4 +1,4 @@
-from django import db
+
 from fastapi import Request,Depends, Response
 from fastapi import APIRouter, Cookie, Depends, Request, Form, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -15,7 +15,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.deps import get_current_user_from_cookie
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload,Session
 from app.db.models import Block, BuddyRequest, Friendship, Guild, GuildMember, Notification, User, UserReport
 import os
 import shutil
