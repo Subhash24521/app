@@ -1,5 +1,5 @@
 from app.core.security import get_password_hash, verify_password, create_access_token
-from datetime import timedelta
+from datetime import datetime, timedelta
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.db.models import Block
 from fastapi import HTTPException, status
@@ -64,3 +64,10 @@ def is_blocked(user1_id: int, user2_id: int, db):
         ((Block.blocker_id == user1_id) & (Block.blocked_id == user2_id)) |
         ((Block.blocker_id == user2_id) & (Block.blocked_id == user1_id))
     ).first() is not None
+
+from fastapi import Request
+
+def update_last_active(request: Request, db, user):
+    ip = request.client.host  # ✅ correct way
+    user.last_active = datetime.utcnow()
+    db.commit()
