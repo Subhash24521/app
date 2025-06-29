@@ -1,4 +1,5 @@
-from fastapi import Request,Depends
+from django import db
+from fastapi import Request,Depends, Response
 from fastapi import APIRouter, Cookie, Depends, Request, Form, HTTPException, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -14,10 +15,12 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.deps import get_current_user_from_cookie
-from app.db.models import Block, BuddyRequest, Friendship, Guild, User
+from sqlalchemy.orm import joinedload
+from app.db.models import Block, BuddyRequest, Friendship, Guild, GuildMember, Notification, User, UserReport
 import os
 import shutil
 import uuid
+
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -76,53 +79,122 @@ def login_user(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(or_(User.username == username, User.email == username)).first()
+    login_input = username.strip().lower()
+
+    user = db.query(User).filter(
+        or_(
+            User.username.ilike(login_input),
+            User.email.ilike(login_input)
+        )
+    ).first()
+
     if not user or not pwd_context.verify(password, user.hashed_password):
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Invalid username or password"})
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "Invalid username or password"
+        })
+
+    if getattr(user, "banned", False):
+        return templates.TemplateResponse("login.html", {
+            "request": request,
+            "error": "Your account has been banned. Contact support."
+        })
+
+    # ✅ Mark user as online and update last active
+    user.is_online = True
+    user.last_active = datetime.utcnow()
+    db.commit()
 
     token = create_access_token(
         data={"sub": user.username},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    
-    response = RedirectResponse(url="/dashboard", status_code=302)
+
+    response = RedirectResponse(
+        url="/developer/reports" if getattr(user, "is_developer", False) else "/dashboard",
+        status_code=302
+    )
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
         samesite="lax",
         secure=IS_RENDER,
-        max_age=60 * 60 * 24 * 7  # 7 days
+        max_age=60 * 60 * 24 * 7
     )
     return response
 
-
-
 @router.get("/logout")
-def logout():
-    response = RedirectResponse(url="/", status_code=302)
+def logout_user(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    # ✅ Update user's status to offline
+    current_user.is_online = False
+    current_user.last_active = datetime.utcnow()
+    db.commit()
+
+    # ✅ Clear auth cookie
+    response = RedirectResponse("/", status_code=302)
     response.delete_cookie("access_token")
     return response
 
 
+
 @router.get("/dashboard")
-def dashboard(request: Request, user: User = Depends(get_current_user_from_cookie)):
+def dashboard(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user_from_cookie),
+):
+    unread_notif_count = db.query(Notification).filter(
+        Notification.user_id == user.id,
+        Notification.read == False
+    ).count()
+
+    online_users = db.query(User).filter(User.is_online == True).all()
+
+    now = datetime.utcnow()
+    can_claim_daily = (
+        not user.last_daily_claim
+        or (now - user.last_daily_claim) > timedelta(hours=24)
+    )
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "current_user": user,
-          "user": user,  
+        "user": user,
         "coins": user.coins,
         "level": user.level,
         "xp": user.xp,
         "high_score": user.high_score,
+        "unread_notif_count": unread_notif_count,
+        "online_users": online_users,
+        "now": now,
+        "can_claim_daily": can_claim_daily  # ✅ Add this
     })
 
 
 
-
 @router.get("/profile")
-def view_profile(request: Request, user: User = Depends(get_current_user_from_cookie)):
-    return templates.TemplateResponse("profile.html", {"request": request, "user": user})
+def view_profile(
+    request: Request,
+    db: Session = Depends(get_db),  # ✅ Add DB session
+    user: User = Depends(get_current_user_from_cookie),
+):
+    # ✅ Count unread notifications for the user
+    unread_notif_count = db.query(Notification).filter(
+        Notification.user_id == user.id,
+        Notification.read == False
+    ).count()
+
+    # ✅ Pass unread_notif_count to the template
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": user,
+        "unread_notif_count": unread_notif_count
+    })
 
 
 @router.get("/profile/edit")
@@ -152,6 +224,27 @@ def update_profile(
     db.commit()
     return RedirectResponse("/profile", status_code=302)
 
+
+@router.post("/upload-avatar")
+def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    os.makedirs(AVATAR_DIR, exist_ok=True)
+
+    ext = os.path.splitext(file.filename)[1]
+    unique_filename = f"user_{uuid.uuid4().hex}{ext}"
+    path = os.path.join(AVATAR_DIR, unique_filename)
+
+    with open(path, "wb") as f:
+        f.write(file.file.read())
+
+    # Save filename to user profile
+    current_user.avatar_filename = unique_filename
+    db.commit()
+
+    return {"filename": unique_filename}
 
 @router.get("/forgot-password")
 def forgot_password_form(request: Request):
@@ -386,25 +479,50 @@ def view_buddy_requests(
 def get_all_users(request: Request, db: Session = Depends(get_db)):
     users = db.query(User).all()
     return templates.TemplateResponse("user_list.html", {"request": request, "users": users})
+from datetime import datetime
 
 @router.get("/user/{user_id}")
 def view_profile(
     request: Request,
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_from_cookie),
+    current_user: User = Depends(get_current_user),  # This gives the logged-in user
 ):
+    # ✅ Update last_active for the current logged-in user
+    try:
+        current_user.last_active = datetime.utcnow()
+        db.commit()
+    except Exception as e:
+        print("Error updating last_active:", e)
+
+    # Get the user being viewed
     viewed_user = db.query(User).filter(User.id == user_id).first()
     if not viewed_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Get the buddy of the viewed user, if any
-    buddy = None
-    if viewed_user.buddy_id:
-        buddy = db.query(User).filter(User.id == viewed_user.buddy_id).first()
+    # Get joined guild (if any)
+    guild_membership = db.query(GuildMember).filter_by(user_id=viewed_user.id).first()
+    joined_guild = db.query(Guild).filter_by(id=guild_membership.guild_id).first() if guild_membership else None
 
-    # Optional: check if current user has blocked this user
-    is_blocked = False  # implement your block check logic
+    # Get buddy info (if any)
+    buddy = db.query(User).filter(User.id == viewed_user.buddy_id).first() if viewed_user.buddy_id else None
+
+    # Check block and friendship status
+    is_blocked = db.query(Block).filter_by(
+        blocker_id=current_user.id,
+        blocked_id=viewed_user.id
+    ).first() is not None
+
+    friendship = db.query(Friendship).filter(
+        or_(
+            (Friendship.user_id == current_user.id) & (Friendship.friend_id == viewed_user.id),
+            (Friendship.user_id == viewed_user.id) & (Friendship.friend_id == current_user.id)
+        )
+    ).first()
+
+    is_friend = friendship.accepted if friendship else False
+    has_pending_request = friendship and not friendship.accepted and friendship.user_id == current_user.id
+    incoming_request = friendship and not friendship.accepted and friendship.friend_id == current_user.id
 
     return templates.TemplateResponse("profile_card.html", {
         "request": request,
@@ -413,7 +531,30 @@ def view_profile(
         "current_user": current_user,
         "viewed_user": viewed_user,
         "is_blocked": is_blocked,
+        "is_friend": is_friend,
+        "has_pending_request": has_pending_request,
+        "incoming_request": incoming_request,
+        "friendship_id": friendship.id if friendship else None,
+        "joined_guild": joined_guild,
     })
+
+
+
+
+@router.post("/friends/remove/{friend_id}")
+def remove_friend(friend_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user_from_cookie)):
+    friendship = db.query(Friendship).filter(
+        ((Friendship.user_id == current_user.id) & (Friendship.friend_id == friend_id)) |
+        ((Friendship.user_id == friend_id) & (Friendship.friend_id == current_user.id))
+    ).first()
+
+    if friendship:
+        db.delete(friendship)
+        db.commit()
+
+    return RedirectResponse(url=f"/user/{friend_id}", status_code=303)
+
+
 
 
 
@@ -450,3 +591,73 @@ def show_users(request: Request, db: Session = Depends(get_db), current_user: Us
     blocked_ids = db.query(Block.blocked_id).filter_by(blocker_id=current_user.id).subquery()
     users = db.query(User).filter(User.id.notin_(blocked_ids)).all()
     return templates.TemplateResponse("user_list.html", {"request": request, "users": users})
+
+
+@router.post("/report-user")
+def report_user(
+    request: Request,
+    user_id: int = Form(...),
+    reason: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    reported_user = db.query(User).filter(User.id == user_id).first()
+    if not reported_user:
+        raise HTTPException(status_code=404, detail="Reported user not found")
+
+    report = UserReport(
+        reported_user_id=reported_user.id,
+        reporter_user_id=current_user.id,
+        reason=reason
+    )
+    db.add(report)
+    db.commit()
+    return RedirectResponse("/dashboard", status_code=302)
+
+@router.get("/online-users", response_class=HTMLResponse)
+def show_online_users(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    threshold = datetime.utcnow() - timedelta(minutes=5)  # show users active in last 5 minutes
+    online_users = db.query(User).filter(
+        User.is_online == True,
+        User.last_active >= threshold
+    ).all()
+
+    print("ONLINE USERS:")
+    for u in online_users:
+        print(f"User {u.id} - {u.username} - Last Active: {u.last_active}")
+
+    return templates.TemplateResponse("online_users.html", {
+        "request": request,
+        "online_users": online_users,
+        "current_user": current_user
+    })
+
+@router.post("/claim-daily")
+def claim_daily_coins(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    now = datetime.utcnow()
+    if current_user.last_daily_claim and (now - current_user.last_daily_claim) < timedelta(hours=24):
+        return RedirectResponse(url="/dashboard", status_code=302)
+
+    current_user.coins += 50  # 🎁 Award daily coins
+    current_user.last_daily_claim = now
+    db.commit()
+
+    response = RedirectResponse(url="/dashboard", status_code=302)
+    response.set_cookie("daily_claimed", "1", max_age=5)
+    return response
+
+
+
+
+
+
+
+

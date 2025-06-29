@@ -95,11 +95,11 @@
     }
 </style>
 
-<h2>Private Chat with {{ friend.username }}</h2>
+<h2>Private Chat with {{ friend.full_name }}</h2>
 
 <div id="chat-box">
   {% for msg in messages %}
-    <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
+    <p><strong>{{ msg.sender.full_name }}:</strong> {{ msg.content }}</p>
   {% endfor %}
    <a href="/dashboard" class="back-link">← Back to Dashboard</a>
 </div>

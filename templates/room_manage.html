@@ -1,0 +1,18 @@
+<style>
+  .error-box {
+    background-color: #ffdddd;
+    color: #cc0000;
+    padding: 10px;
+    border: 1px solid #cc0000;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    text-align: center;
+  }
+</style>
+
+
+{% if error_message %}
+  <div class="error-box">
+    {{ error_message }}
+  </div>
+{% endif %}

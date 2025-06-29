@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  body {
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(to bottom, #0f111a, #1a1d2c);
+    color: #f5f6fa;
+  }
+
+  h2 {
+    text-align: center;
+    color: #8e7fff;
+    margin: 30px 0;
+    font-size: 2rem;
+    text-shadow: 0 0 8px #6c5ce7;
+  }
+
+  .report-card {
+    background: rgba(26, 29, 44, 0.85);
+    border: 2px solid #2e2f49;
+    border-left: 6px solid #6c5ce7;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px auto;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 0 15px rgba(108, 92, 231, 0.4);
+    transition: transform 0.3s ease;
+  }
+
+  .report-card:hover {
+    transform: scale(1.02);
+  }
+
+  .report-card p {
+    margin-bottom: 10px;
+    font-size: 1rem;
+  }
+
+  .report-card strong {
+    color: #a29bfe;
+  }
+
+  .status {
+    font-weight: bold;
+  }
+
+  .status.active {
+    color: #00ff99;
+  }
+
+  .status.banned {
+    color: #ff4c4c;
+  }
+
+  form button {
+    background: linear-gradient(135deg, #6c5ce7, #8e7fff);
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 0 0 10px #6c5ce7;
+  }
+
+  form button:hover {
+    background: linear-gradient(135deg, #7d66ff, #4b6aff);
+    box-shadow: 0 0 16px #a29bfe;
+  }
+</style>
+
+<h2>Reported Users</h2>
+
+{% for report in reports %}
+  <div class="report-card">
+    <p><strong>Reported User:</strong> {{ report.reported_user.username }} (ID: {{ report.reported_user_id }})</p>
+    <p><strong>Reason:</strong> {{ report.reason }}</p>
+    <p class="status {% if report.reported_user.banned %}banned{% else %}active{% endif %}">
+      <strong>Status:</strong>
+      {% if report.reported_user.banned %}
+        🔴 Banned
+      {% else %}
+        🟢 Active
+      {% endif %}
+    </p>
+
+    <form method="post" action="/developer/toggle-ban">
+      <input type="hidden" name="user_id" value="{{ report.reported_user_id }}">
+      <button type="submit">
+        {% if report.reported_user.banned %}
+          ✅ Unban User
+        {% else %}
+          🚫 Ban User
+        {% endif %}
+      </button>
+    </form>
+  </div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,98 @@
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+<style>
+  body {
+    background-color: #0e0e1a;
+    font-family: 'Orbitron', sans-serif;
+    color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .title {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #00ffff;
+    text-shadow: 0 0 10px #00ffffaa;
+    margin: 30px 0 20px;
+  }
+
+  .user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  .user-card {
+    text-decoration: none;
+    color: white;
+  }
+
+  .user-icon {
+    background: linear-gradient(135deg, #0ff, #00f);
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 0 15px #00ffff88;
+    text-align: center;
+    width: 120px;
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease;
+  }
+
+  .user-icon:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 25px #00ffffcc;
+  }
+
+  .user-icon img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    border: 2px solid #00ffff;
+  }
+
+  .user-icon p {
+    font-size: 0.95rem;
+    text-align: center;
+    color: #f0f0f0;
+    text-shadow: 0 0 5px #00ffff;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 2rem;
+    color: #00ffff;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<h2 class="title">🟢 Online Players</h2>
+<div class="user-grid">
+  {% for user in online_users %}
+  <a href="/user/{{ user.id }}" class="user-card">
+    <div class="user-icon">
+      <img src="{{ user.avatar_url or '/static/default-avatar.png' }}" alt="avatar" />
+      <p title="{{ user.full_name or user.username }}">{{ user.full_name or user.username }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+<a href="/dashboard" class="back-link">← Back to Dashboard</a>

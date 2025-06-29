@@ -1,0 +1,99 @@
+
+<style>
+  body {
+    background: linear-gradient(145deg, #0e0f1a, #1a1c29);
+    font-family: 'Orbitron', 'Segoe UI', sans-serif;
+    color: #f0f0f0;
+    padding: 20px;
+  }
+
+  .notifications-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #1c1e2e;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+  }
+
+  .notifications-container h2 {
+    color: #00ffff;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 28px;
+  }
+
+  .notification {
+    background: #26283c;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+  }
+
+  .notification.unread {
+    font-weight: bold;
+    border-left: 4px solid #00ffff;
+  }
+
+  .notification small {
+    color: #aaa;
+    font-size: 12px;
+  }
+
+  .notification a {
+    display: inline-block;
+    margin-top: 8px;
+    color: #00ffff;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .notification a:hover {
+    color: #00c0c0;
+    text-decoration: underline;
+  }
+
+  .empty-message {
+    text-align: center;
+    color: #999;
+    font-size: 16px;
+    margin-top: 40px;
+  }
+
+  .back-link {
+    display: inline-block;
+    text-align: center;
+    color: var(--accent-light);
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+</style>
+
+<div class="notifications-container">
+  <h2>📢 Your Notifications</h2>
+
+  {% if notifications %}
+    {% for notif in notifications %}
+      <div class="notification {% if not notif.read %}unread{% endif %}">
+        {{ notif.message }}<br>
+        <small>{{ notif.timestamp.strftime("%b %d, %Y %H:%M UTC") }}</small><br>
+
+        {% if notif.type == "message" and notif.related_user_id %}
+          <a href="/private-messages/?friend_id={{ notif.related_user_id }}">📨 Open Chat</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="empty-message">No notifications yet. Stay tuned for updates!</p>
+  {% endif %}
+  <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+</div>
+

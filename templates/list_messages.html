@@ -17,7 +17,6 @@
       overflow: hidden;
     }
 
-    /* ========== SIDEBAR ========== */
     .sidebar {
       width: 260px;
       background: linear-gradient(145deg, #121421, #1a1d2c);
@@ -47,6 +46,9 @@
       text-decoration: none;
       border: 1px solid #00fff722;
       transition: all 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .friend:hover,
@@ -56,7 +58,15 @@
       box-shadow: 0 0 20px #00fff7cc;
     }
 
-    /* ========== CHAT WINDOW ========== */
+    .glow-notif {
+      animation: glow 1s infinite alternate;
+      border-radius: 12px;
+      padding: 2px 8px;
+      background: #ff3b3b;
+      color: white;
+      font-size: 0.8rem;
+    }
+
     .chat {
       flex: 1;
       display: flex;
@@ -84,8 +94,8 @@
       font-size: 1rem;
       word-break: break-word;
       position: relative;
-      box-shadow: 0 0 10px #00fff722;
       animation: pulseGlow 2s infinite alternate;
+      box-shadow: 0 0 10px #00fff733;
     }
 
     .sent {
@@ -100,6 +110,12 @@
       background: #1e2135;
       color: #e0f7fa;
       border-left: 4px solid #00fff7;
+    }
+
+    .status {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      opacity: 0.75;
     }
 
     form {
@@ -171,23 +187,27 @@
       100% { box-shadow: 0 0 20px #00fff7aa; }
     }
 
+    @keyframes glow {
+      0% { box-shadow: 0 0 5px #ff3b3b66; }
+      100% { box-shadow: 0 0 15px #ff3b3bff; }
+    }
+
     @media (max-width: 768px) {
-      .sidebar {
-        display: none;
-      }
+      .sidebar { display: none; }
     }
   </style>
 </head>
 
 <body>
-
-  <!-- ======= SIDEBAR ======= -->
+  <!-- Sidebar -->
   <aside class="sidebar">
     <h2>Friends</h2>
     {% for u in users %}
-      <a href="/private-messages/?friend_id={{ u.id }}"
-         class="friend {% if selected_user and selected_user.id == u.id %}active{% endif %}">
+      <a href="/private-messages/?friend_id={{ u.id }}" class="friend {% if selected_user and selected_user.id == u.id %}active{% endif %}">
         {{ u.full_name }}
+        {% if u.id != current_user.id and unread_notif_count > 0 and selected_user and selected_user.id != u.id %}
+          <span class="glow-notif">●</span>
+        {% endif %}
       </a>
     {% endfor %}
     {% if not users %}
@@ -195,28 +215,47 @@
     {% endif %}
   </aside>
 
-  <!-- ======= CHAT WINDOW ======= -->
+  <!-- Chat Window -->
   <main class="chat">
     {% if selected_user %}
-      <div class="messages">
+      <div class="messages" id="message-container">
         {% for msg in messages %}
           <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
-            {{ msg.content }}
+            <p>{{ msg.content }}</p>
+            <small>{{ msg.timestamp.strftime('%b %d, %Y %H:%M') }}</small>
+            {% if msg.sender_id == current_user.id %}
+              <div class="status">
+                {% if msg.read %}✅ Seen{% else %}🕓 Delivered{% endif %}
+              </div>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
-
       <form method="POST" action="/private-messages/chat/{{ selected_user.id }}">
-        <textarea name="content" rows="2" required placeholder="Type a message..."></textarea>
+        <textarea name="content" rows="2" required placeholder="Type a message..." onkeydown="handleKeyPress(event)"></textarea>
         <button type="submit">Send</button>
       </form>
-
     {% else %}
-      <div class="placeholder">
-        Select a friend to start chatting.
-      </div>
+      <div class="placeholder">Select a friend to start chatting.</div>
     {% endif %}
     <a href="/dashboard" class="back-link">← Back to Dashboard</a>
   </main>
+
+  <script>
+    function handleKeyPress(event) {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        event.target.form.submit();
+      }
+    }
+
+    // Auto-scroll to bottom
+    window.onload = () => {
+      const container = document.getElementById('message-container');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+  </script>
 </body>
 </html>

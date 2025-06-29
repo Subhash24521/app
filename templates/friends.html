@@ -6,7 +6,6 @@
   <title>Your Friends – HoloZone</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
-
     :root {
       --bg: #0f111a;
       --card: #1a1d2c;
@@ -17,13 +16,11 @@
       --danger: #ff4d4d;
       --danger-dark: #cc0000;
     }
-
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-
     body {
       font-family: 'Orbitron', sans-serif;
       background: var(--bg);
@@ -34,7 +31,6 @@
       padding: 40px 20px;
       min-height: 100vh;
     }
-
     .container {
       background: rgba(26, 29, 44, 0.7);
       backdrop-filter: blur(16px);
@@ -44,7 +40,6 @@
       max-width: 700px;
       width: 100%;
     }
-
     h1 {
       font-size: 2rem;
       text-align: center;
@@ -53,13 +48,11 @@
       font-weight: 800;
       letter-spacing: 1px;
     }
-
     .friends-list {
       list-style: none;
       margin: 0;
       padding: 0;
     }
-
     .friend-item {
       background: var(--card);
       border-radius: 14px;
@@ -71,17 +64,14 @@
       box-shadow: 0 0 10px #6c5ce744;
       transition: background 0.2s ease;
     }
-
     .friend-item:hover {
       background: #222538;
     }
-
     .friend-info {
       display: flex;
       align-items: center;
       gap: 16px;
     }
-
     .friend-avatar {
       width: 48px;
       height: 48px;
@@ -96,7 +86,6 @@
       box-shadow: 0 0 10px #8e7fff99;
       user-select: none;
     }
-
     .friend-name {
       font-size: 1.1rem;
       color: #ffffff;
@@ -105,12 +94,10 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .actions {
       display: flex;
       gap: 10px;
     }
-
     .btn {
       padding: 8px 14px;
       border: none;
@@ -120,36 +107,30 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
     .chat-btn {
       background: linear-gradient(135deg, var(--accent), #3c49a5);
       color: #fff;
       box-shadow: 0 0 12px var(--accent);
     }
-
     .chat-btn:hover {
       background: linear-gradient(135deg, #4a63ff, #6c5ce7);
       box-shadow: 0 0 16px #8e7fffaa;
     }
-
     .unfriend-btn {
       background: var(--danger);
       color: #fff;
       box-shadow: 0 0 12px #ff4d4d88;
     }
-
     .unfriend-btn:hover {
       background: var(--danger-dark);
       box-shadow: 0 0 16px #ff7f7f99;
     }
-
     .no-friends {
       text-align: center;
       margin-top: 40px;
       color: var(--subtext);
       font-style: italic;
     }
-
     .top-buttons {
       display: flex;
       justify-content: center;
@@ -157,17 +138,14 @@
       margin-bottom: 24px;
       flex-wrap: wrap;
     }
-
     .top-buttons .btn {
       background: linear-gradient(135deg, #4a63ff, #6c5ce7);
       color: white;
       box-shadow: 0 0 10px #6c5ce7aa;
     }
-
     .top-buttons .btn:hover {
       background: linear-gradient(135deg, #5a75ff, #7c6cff);
     }
-
     @media (max-width: 480px) {
       .friend-item {
         flex-direction: column;
@@ -183,15 +161,13 @@
         text-align: center;
       }
     }
-
-      .back-link {
+    .back-link {
       display: inline-block;
       margin-top: 2rem;
       color: var(--primary);
       text-decoration: none;
       font-weight: 500;
     }
-
     .back-link:hover {
       text-decoration: underline;
     }
@@ -200,7 +176,6 @@
 <body>
   <div class="container">
     <h1>💫 Your Friends</h1>
-
     <div class="top-buttons">
       <a href="/friends/requests">
         <button type="button" class="btn">Friend Requests</button>
@@ -213,17 +188,19 @@
     {% if friends %}
       <ul class="friends-list">
         {% for friend in friends %}
-          {% set parts = friend.full_name.split(" ") %}
-          {% if parts|length >= 2 %}
+          {% set full_name = friend.full_name or "" %}
+          {% set parts = full_name.split(" ") %}
+          {% if parts | length >= 2 and parts[0] and parts[1] %}
             {% set initials = (parts[0][0] + parts[1][0]).upper() %}
+          {% elif parts | length == 1 and parts[0] %}
+            {% set initials = parts[0][0].upper() %}
           {% else %}
-            {% set initials = friend.full_name[:2].upper() %}
+            {% set initials = "?" %}
           {% endif %}
-
           <li class="friend-item">
             <div class="friend-info">
               <div class="friend-avatar">{{ initials }}</div>
-              <div class="friend-name">{{ friend.full_name }}</div>
+              <div class="friend-name">{{ full_name or "Unnamed" }}</div>
             </div>
             <div class="actions">
               <a href="/private-messages/">

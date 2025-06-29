@@ -115,11 +115,18 @@ footer {
                 <a href="/dashboard">Dashboard</a>
                 <a href="/friends/list" class="active">Friends-List</a>
                 <a href="/users" class="active">All-Users</a>
+ <a href="/notifications/">Notifications  <!-- ✅ Fixed -->
+   {% if unread_notif_count is defined and unread_notif_count > 0 %}
+
+    <span class="glow-notif">{{ unread_notif_count }}</span>
+  {% endif %}
+</a>
+
                 <a href="/contact" class="active">Contact</a>
                 <a href="/logout" class="logout">Logout</a>
 
             {% else %}
-                <a href="/login">Login</a>
+                <a href="/">Login</a>
                 <a href="/register">Register</a>
             {% endif %}
         </nav>

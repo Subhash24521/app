@@ -194,15 +194,27 @@
     .kick-btn:hover {
       background: #d43a3a;
     }
+
+      .error-box {
+    background-color: #ff4d4d22;
+    color: #ff4d4d;
+    padding: 1rem;
+    border: 1px solid #ff4d4d;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    text-align: center;
+  }
   </style>
 </head>
 <body>
+<a href="/game-room/{{ room.id }}/requests" class="back-link">View Requests</a>
 
   <!-- User Profiles -->
   <div class="user-section">
     {% for participant in room.participants %}
       <div class="user-card">
-        <img src="{{ participant.avatar_url or '/static/avatars/default.png' }}" class="avatar" />
+       <img src="/static/avatars/default.png" alt="Avatar">
         <div class="user-name">
           {{ participant.full_name }}
           {% if participant.id == room.created_by %}
@@ -219,6 +231,11 @@
       </div>
     {% endfor %}
   </div>
+{% if error_message %}
+  <div class="error-box">
+    {{ error_message }}
+  </div>
+{% endif %}
 
   <!-- Chat Interface -->
   <div class="chat-container">

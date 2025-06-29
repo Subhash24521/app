@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Join Requests - {{ room.name }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #0e0e1a;
+      font-family: 'Orbitron', sans-serif;
+      color: #e6faff;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2rem;
+      border-radius: 16px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 0 12px #00ffe080;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    h1 {
+      background: linear-gradient(90deg, #00ffe0, #ff00e0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .request-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 0 8px rgba(0, 255, 224, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .request-info {
+      font-size: 1rem;
+      color: #e0f7f9;
+    }
+
+    .actions form {
+      display: inline;
+    }
+
+    .actions button {
+      margin-left: 8px;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
+    }
+
+    .accept-btn {
+      background-color: #00ffbb;
+      color: #001010;
+    }
+
+    .accept-btn:hover {
+      background-color: #00cc99;
+    }
+
+    .reject-btn {
+      background-color: #ff4d4d;
+      color: white;
+    }
+
+    .reject-btn:hover {
+      background-color: #e04343;
+    }
+
+    a.back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #00ffe0;
+      text-decoration: none;
+    }
+
+    a.back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/game-chat/{{ room.id }}/chat" class="back-link">← Back to Room</a>
+    <h1>Join Requests for "{{ room.name }}"</h1>
+
+    {% if join_requests %}
+      {% for request in join_requests %}
+        <div class="request-card">
+          <div class="request-info">
+            <strong>User:</strong> {{ request.user.full_name or 'Unknown' }}<br>
+            <strong>ID:</strong> {{ request.user.id }}
+          </div>
+          <div class="actions">
+            <form action="/game-room/{{ room.id }}/requests/{{ request.id }}/accept" method="post">
+              <button class="accept-btn" type="submit">Accept</button>
+            </form>
+            <form action="/game-room/{{ room.id }}/requests/{{ request.id }}/reject" method="post">
+              <button class="reject-btn" type="submit">Reject</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p style="color: #9caec2;">No join requests at this time.</p>
+    {% endif %}
+  </div>
+</body>
+</html>

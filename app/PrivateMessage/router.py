@@ -4,7 +4,8 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
-from app.db.models import User, Friendship, PrivateMessage
+from app.auth.utils import is_blocked
+from app.db.models import Notification, User, Friendship, PrivateMessage
 from app.core.deps import get_current_user_from_cookie
 from app.core.database import get_db
 
@@ -52,7 +53,7 @@ def send_message_form(
         receiver_id = None
 
     return templates.TemplateResponse(
-        "send_message.html",
+        "list_messages.html", 
         {
             "request": request,
             "users": friends,         # list of User objects
@@ -60,7 +61,6 @@ def send_message_form(
             "error": None,
         },
     )
-
 
 @router.post("/private-messages/send")
 def send_message(
@@ -70,13 +70,9 @@ def send_message(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """
-    Handle form submission. Verify that receiver_id is a valid friend,
-    and that content is not empty. Otherwise re-render with error.
-    """
     sender_id = current_user.id
 
-    # 1) Re-fetch accepted friends so we can re-display the dropdown if needed
+    # Get friends of current user
     friends = (
         db.query(User)
         .join(Friendship, Friendship.friend_id == User.id)
@@ -84,10 +80,10 @@ def send_message(
         .all()
     )
 
-    # 2) Verify receiver is actually in friends
+    # Check if the receiver is a valid friend
     if not any(f.id == receiver_id for f in friends):
         return templates.TemplateResponse(
-            "send_message.html",
+            "list_messages.html", 
             {
                 "request": request,
                 "users": friends,
@@ -96,11 +92,22 @@ def send_message(
             },
         )
 
-    # 3) Ensure content is not blank
+    # Check block status
+    if is_blocked(sender_id, receiver_id, db):
+        return templates.TemplateResponse(
+            "list_messages.html", 
+            {
+                "request": request,
+                "users": friends,
+                "receiver_id": receiver_id,
+                "error": "Message blocked due to user restrictions.",
+            },
+        )
+
     content_clean = content.strip()
     if not content_clean:
         return templates.TemplateResponse(
-            "send_message.html",
+            "list_messages.html",
             {
                 "request": request,
                 "users": friends,
@@ -109,20 +116,32 @@ def send_message(
             },
         )
 
-    # 4) Save new PrivateMessage
+    # ✅ Save the message with read=False
     message = PrivateMessage(
         sender_id=sender_id,
         receiver_id=receiver_id,
         content=content_clean,
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.utcnow(),
+        read=False  # 👈 Mark as unread initially
     )
     db.add(message)
     db.commit()
     db.refresh(message)
 
-    return RedirectResponse(
-        url=f"/private-messages/{message.id}", status_code=status.HTTP_303_SEE_OTHER
+    # ✅ Create a notification (optional)
+    notif = Notification(
+        user_id=receiver_id,
+        message=f"You have a new message from {current_user.username}",
+        timestamp=datetime.utcnow(),
     )
+    db.add(notif)
+    db.commit()
+
+    return RedirectResponse(
+        url=f"/private-messages/?friend_id={receiver_id}",
+        status_code=status.HTTP_303_SEE_OTHER
+    )
+
 
 
 @router.get("/private-messages/{message_id}", response_class=HTMLResponse)
@@ -164,7 +183,6 @@ def view_message(
         },
     )
 
-
 @router.get("/private-messages/", response_class=HTMLResponse)
 def list_messages(
     request: Request,
@@ -172,12 +190,6 @@ def list_messages(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """
-    Show a chat‐style interface:
-      - Sidebar: all accepted friends of current_user
-      - Main pane: conversation with ?friend_id= (if provided), otherwise a placeholder
-    """
-    # 1) Fetch all accepted friends for the sidebar
     friends = (
         db.query(User)
         .join(Friendship, Friendship.friend_id == User.id)
@@ -188,24 +200,34 @@ def list_messages(
     selected_user = None
     messages = []
 
-    # 2) If friend_id is given, ensure they are in current_user’s friend list
     if friend_id is not None:
         if not any(f.id == friend_id for f in friends):
             raise HTTPException(status_code=404, detail="Friend not found")
 
         selected_user = db.query(User).filter(User.id == friend_id).first()
-        # 3) Load messages between current_user and selected_user (both directions)
+
+        db.query(PrivateMessage).filter(
+            PrivateMessage.sender_id == friend_id,
+            PrivateMessage.receiver_id == current_user.id,
+            PrivateMessage.read == False
+        ).update({PrivateMessage.read: True}, synchronize_session=False)
+        db.commit()
+
         messages = (
             db.query(PrivateMessage)
             .filter(
-                ((PrivateMessage.sender_id == current_user.id)
-                  & (PrivateMessage.receiver_id == friend_id))
-                | ((PrivateMessage.sender_id == friend_id)
-                  & (PrivateMessage.receiver_id == current_user.id))
+                ((PrivateMessage.sender_id == current_user.id) & (PrivateMessage.receiver_id == friend_id))
+                | ((PrivateMessage.sender_id == friend_id) & (PrivateMessage.receiver_id == current_user.id))
             )
             .order_by(PrivateMessage.timestamp.asc())
             .all()
         )
+
+    # ✅ Count unread notifications
+    unread_notif_count = db.query(Notification).filter(
+        Notification.user_id == current_user.id,
+        Notification.read == False
+    ).count()
 
     return templates.TemplateResponse(
         "list_messages.html",
@@ -215,9 +237,13 @@ def list_messages(
             "selected_user": selected_user,
             "messages": messages,
             "current_user": current_user,
+            "unread_notif_count": unread_notif_count,  # 👈 Add this!
         },
     )
 
+
+
+from datetime import datetime
 
 @router.post("/private-messages/chat/{friend_id}")
 def post_message_to_friend(
@@ -227,26 +253,87 @@ def post_message_to_friend(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """
-    Handle sending a new chat message to `/private-messages/?friend_id=<X>`.
-    """
     sender_id = current_user.id
 
-    # Verify they are still friends
+    # ✅ Check if they are still friends
     if not are_friends(db, sender_id, friend_id):
-        raise HTTPException(status_code=403, detail="Not friends with that user")
+        raise HTTPException(status_code=403, detail="You are no longer friends with this user.")
 
-    # Save the new message
+    # ✅ Check if blocked (either direction)
+    if is_blocked(sender_id, friend_id, db) or is_blocked(friend_id, sender_id, db):
+        raise HTTPException(status_code=403, detail="Messaging is blocked due to user restrictions.")
+
+    # ✅ Validate message content
+    content_clean = content.strip()
+    if not content_clean:
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+
+    # ✅ Save the new message
     new_msg = PrivateMessage(
         sender_id=sender_id,
         receiver_id=friend_id,
-        content=content.strip(),
-        timestamp=datetime.datetime.utcnow(),
+        content=content_clean,
+        timestamp=datetime.utcnow(),
+        read=False
     )
     db.add(new_msg)
     db.commit()
+    db.refresh(new_msg)
 
-    # Redirect back to GET /private-messages/?friend_id=<X>
-    return RedirectResponse(
-        url=f"/private-messages/?friend_id={friend_id}", status_code=status.HTTP_303_SEE_OTHER
+    # ✅ Send notification
+    notif = Notification(
+        user_id=friend_id,
+        message=f"You have a new message from {current_user.username}",
+        timestamp=datetime.utcnow(),
+        type="message",
+        related_user_id=sender_id
     )
+    db.add(notif)
+    db.commit()
+
+    # ✅ Redirect to chat view
+    return RedirectResponse(
+        url=f"/private-messages/?friend_id={friend_id}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.get("/notifications/", response_class=HTMLResponse)
+def list_notifications(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    notifications = db.query(Notification).filter(
+        Notification.user_id == current_user.id
+    ).order_by(Notification.timestamp.desc()).all()
+
+    # Mark unread notifications as read
+    db.query(Notification).filter(
+        Notification.user_id == current_user.id,
+        Notification.read == False
+    ).update({Notification.read: True})
+    db.commit()
+
+    return templates.TemplateResponse("notifications.html", {
+        "request": request,
+        "notifications": notifications,
+        "marked_read": request.query_params.get("marked_read") == "true"
+    })
+
+
+@router.post("/notifications/mark-read")
+def mark_notifications_read(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    db.query(Notification).filter(
+        Notification.user_id == current_user.id,
+        Notification.read == False
+    ).update({Notification.read: True})
+    db.commit()
+    
+    # Redirect with query parameter
+    return RedirectResponse("/notifications/?marked_read=true", status_code=status.HTTP_303_SEE_OTHER)
+
+

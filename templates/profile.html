@@ -127,7 +127,7 @@
 </style>
 
 <div class="profile-container">
-  <img src="{{ user.avatar_url or '/static/default_avatar.png' }}" alt="User Avatar" class="profile-avatar" />
+ <img src="{{ user.avatar_url or '/static/default_avatar.png' }}" alt="User Avatar" class="profile-avatar" />
   <div class="profile-details">
     <h2 class="profile-name">{{ user.full_name or user.username }}</h2>
     <p class="profile-username">@{{ user.username }}</p>

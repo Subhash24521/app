@@ -21,7 +21,6 @@ def show_create_guild_form(
 ):
     return templates.TemplateResponse("create_guild.html", {"request": request, "user": user})
 
-
 @router.post("/guilds/create")
 def create_guild_post(
     request: Request,
@@ -30,25 +29,61 @@ def create_guild_post(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_cookie),
 ):
+    # ✅ Step 1: Prevent users from creating multiple guilds
+    existing_membership = db.query(models.GuildMember).filter_by(user_id=current_user.id).first()
+    if existing_membership:
+        return templates.TemplateResponse("create_guild.html", {
+            "request": request,
+            "user": current_user,
+            "error": "❌ You are already a member of a guild and cannot create another.",
+        })
+
+    # ✅ Step 2: Check if guild name already exists
     existing = db.query(models.Guild).filter(models.Guild.name == name).first()
     if existing:
         return templates.TemplateResponse("create_guild.html", {
             "request": request,
             "user": current_user,
-            "error": "Guild name already exists",
+            "error": "⚠️ Guild name already exists.",
         })
 
+    # ✅ Step 3: Check if user has enough coins
+    if current_user.coins < 5000:
+        return templates.TemplateResponse("create_guild.html", {
+            "request": request,
+            "user": current_user,
+            "error": "💰 You need at least 5000 coins to create a guild.",
+        })
+
+    # ✅ Step 4: Deduct 5000 coins
+    current_user.coins -= 5000
+    db.commit()
+
+    # ✅ Step 5: Create the guild
     guild = models.Guild(name=name, description=description, created_by=current_user.id)
     db.add(guild)
     db.commit()
     db.refresh(guild)
 
-    # Add founder
-    founder_membership = models.GuildMember(user_id=current_user.id, guild_id=guild.id, role="Founder")
-    db.add(founder_membership)
+    # ✅ Step 6: Register user as Founder
+    founder = models.GuildMember(user_id=current_user.id, guild_id=guild.id, role="Founder")
+    db.add(founder)
     db.commit()
 
     return RedirectResponse(f"/guilds/{guild.id}", status_code=HTTP_303_SEE_OTHER)
+
+@router.get("/guilds/create", response_class=HTMLResponse)
+def show_create_guild_form(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: models.User = Depends(get_current_user_from_cookie),
+):
+    existing_membership = db.query(models.GuildMember).filter_by(user_id=user.id).first()
+    if existing_membership:
+        return RedirectResponse("/guilds", status_code=HTTP_303_SEE_OTHER)  # or show a message
+
+    return templates.TemplateResponse("create_guild.html", {"request": request, "user": user})
+
 
 
 @router.get("/guilds", response_class=HTMLResponse)
@@ -73,12 +108,17 @@ def guild_detail(
         raise HTTPException(status_code=404, detail="Guild not found")
 
     membership = db.query(models.GuildMember).filter_by(user_id=user.id, guild_id=guild_id).first()
-
+    unread_notif_count = db.query(models.Notification).filter(
+        models.Notification.user_id == user.id,
+        models.Notification.read == False
+    ).count()
     if not membership:
         return templates.TemplateResponse("guild_join.html", {
             "request": request,
             "guild": guild,
             "user": user,
+            "unread_notif_count": unread_notif_count,
+           
         })
 
     user_role = membership.role
@@ -114,6 +154,7 @@ def guild_detail(
         "messages": messages,
         "user_role": user_role,
         "join_requests": join_requests,
+         "unread_notif_count": unread_notif_count,
     })
 
 

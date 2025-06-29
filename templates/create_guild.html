@@ -93,6 +93,10 @@
   </style>
 </head>
 <body>
+  {% if not user.guild %}
+  <a href="/guilds/create" class="btn">🏰 Create Guild</a>
+{% endif %}
+
   <h1>Create a New Guild</h1>
   <form method="post">
     <label for="name">Guild Name</label>

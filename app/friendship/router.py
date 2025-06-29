@@ -47,15 +47,24 @@ def add_friend_form(request: Request):
 
 @router.post("/add-by-code")
 def add_friend_by_code(
-    user_code: str = Form(...),
+    user_code: str = Form(None),
+    username: str = Form(None),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_cookie)
 ):
-    user_code = user_code.strip()
+    if not user_code and not username:
+        raise HTTPException(status_code=400, detail="Provide either user code or username.")
 
-    friend = db.query(models.User).filter(models.User.user_code == user_code).first()
+    filters = []
+    if user_code:
+        filters.append(models.User.user_code == user_code.strip())
+    if username:
+        filters.append(models.User.username == username.strip())
+
+    friend = db.query(models.User).filter(or_(*filters)).first()
+
     if not friend or friend.id == current_user.id:
-        raise HTTPException(status_code=400, detail="Invalid user code.")
+        raise HTTPException(status_code=400, detail="User not found or invalid.")
 
     existing = db.query(models.Friendship).filter(
         or_(
@@ -75,6 +84,8 @@ def add_friend_by_code(
     db.commit()
 
     return RedirectResponse("/friends/list", status_code=303)
+
+
 
 
 @router.get("/requests")
@@ -109,42 +120,46 @@ def friend_requests(
     )
 
 
-
 @router.post("/accept/{friendship_id}")
 def accept_friend(
     friendship_id: int,
     user: models.User = Depends(get_current_user_from_cookie),
     db: Session = Depends(get_db)
 ):
-    """
-    Accept an incoming friend request. We mark the record accepted=True,
-    then also create a reciprocal accepted=True row so that each user sees
-    each other as friends.
-    """
-    friendship = (
-        db.query(models.Friendship)
-        .filter(
-            models.Friendship.id == friendship_id,
-            models.Friendship.friend_id == user.id,
-            models.Friendship.accepted == False
-        )
-        .first()
-    )
-    if not friendship:
-        raise HTTPException(status_code=404, detail="Friend request not found")
+    # Try to find the friend request
+    friendship = db.query(models.Friendship).filter(
+        models.Friendship.id == friendship_id
+    ).first()
 
-    # Mark this request accepted
+    if not friendship:
+        raise HTTPException(status_code=404, detail="Friend request not found.")
+
+    # Check who is trying to accept
+    if friendship.friend_id != user.id:
+        raise HTTPException(status_code=403, detail="You are not the recipient of this friend request.")
+
+    if friendship.accepted:
+        raise HTTPException(status_code=400, detail="This friend request has already been accepted.")
+
+    # Accept the request
     friendship.accepted = True
     db.commit()
 
-    # Create reciprocal “accepted” relationship
-    reverse = models.Friendship(
+    # Create reciprocal friendship if not already present
+    reverse_exists = db.query(models.Friendship).filter_by(
         user_id=friendship.friend_id,
         friend_id=friendship.user_id,
         accepted=True
-    )
-    db.add(reverse)
-    db.commit()
+    ).first()
+
+    if not reverse_exists:
+        reverse = models.Friendship(
+            user_id=friendship.friend_id,
+            friend_id=friendship.user_id,
+            accepted=True
+        )
+        db.add(reverse)
+        db.commit()
 
     return RedirectResponse("/friends/requests", status_code=303)
 

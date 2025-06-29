@@ -10,8 +10,11 @@ from app.chat.routes import router as chat_router
 from app.guilds.router import router as guilds_router
 from app.friendship.router import router as friends_router
 from app.PrivateMessage.router import router as privatemessage_router
+from app.developer.routes import router as developer_router
 from app.db import models
+from app.auth.middleware import UpdateLastActiveMiddleware
 from app.core.database import engine
+from app.games.ludo import ludo_routes
 
 app = FastAPI()
 
@@ -27,3 +30,6 @@ app.include_router(chat_router)
 app.include_router(guilds_router)
 app.include_router(privatemessage_router)
 app.include_router(friends_router, prefix="/friends", tags=["friends"])
+app.include_router(developer_router)
+app.include_router(ludo_routes.router)
+app.add_middleware(UpdateLastActiveMiddleware)

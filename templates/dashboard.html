@@ -2,6 +2,7 @@
 {% block title %}HoloZone Dashboard{% endblock %}
 
 {% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0e0e1a;
@@ -199,6 +200,122 @@
   animation: pulse 3s infinite;
 }
 
+  .see-online-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    margin: 20px auto;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    text-align: center;
+    text-decoration: none;
+    color: #00ffff;
+    border: 2px solid #00ffff;
+    border-radius: 10px;
+    background: transparent;
+    box-shadow: 0 0 12px #00ffff88;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .see-online-btn:hover {
+    background: #00ffff22;
+    box-shadow: 0 0 20px #00ffffcc;
+    transform: scale(1.05);
+  }
+
+  .see-online-container {
+    text-align: center;
+  }
+
+  .buddy-request {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  box-shadow: 0 0 12px rgba(0, 255, 224, 0.1);
+  transition: 0.3s;
+}
+
+.buddy-request:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(0, 255, 224, 0.35);
+}
+
+.buddy-request p {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+}
+
+.request-action-btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin: 0 0.5rem;
+  transition: 0.2s ease-in-out;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.9rem;
+}
+
+.buddy-btn {
+  background: linear-gradient(135deg, #00ffcc, #00ccff);
+  color: #0e0e1a;
+  box-shadow: 0 0 10px #00ffff88;
+}
+
+.buddy-btn:hover {
+  background: #00ffee;
+  box-shadow: 0 0 20px #00ffffcc;
+  transform: scale(1.05);
+}
+
+.block-btn {
+  background: linear-gradient(135deg, #ff0055, #cc0033);
+  color: #fff;
+  box-shadow: 0 0 10px #ff005588;
+}
+
+.block-btn:hover {
+  background: #ff1a66;
+  box-shadow: 0 0 20px #ff0055cc;
+  transform: scale(1.05);
+}
+
+.daily-claim-container {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.daily-claim-btn {
+  background: linear-gradient(135deg, #ffbf00, #ff007f);
+  box-shadow: 0 0 12px #ffbf00aa;
+  color: #fff;
+  font-weight: 700;
+  padding: 0.7rem 1.4rem;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.daily-claim-btn:hover {
+  background: linear-gradient(135deg, #ffc94d, #ff3399);
+  box-shadow: 0 0 20px #ffc94dcc;
+  transform: scale(1.06);
+}
+
+.claim-status-text {
+  color: #9caec2;
+  font-size: 1rem;
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+
 </style>
 
 <div class="dashboard-container neon-glow">
@@ -218,7 +335,7 @@
 </div>
       <div class="user-info">
         <div class="username">{{ user.full_name }}</div>
-        <div class="username">Id {{ user.user_code  }}</div>
+        <div class="username">Id : {{ user.id }}  </div>
         <div class="level">Level {{ user.level }}</div>
         <div class="level-bar"><div class="progress"></div></div>
         <div style="margin-top: 1rem;">
@@ -269,12 +386,24 @@
 
   <div class="panel">
     <h2>Main Area</h2>
+    <div class="daily-claim-container">
+  {% if can_claim_daily %}
+    <form method="post" action="/claim-daily">
+      <button class="btn-glow daily-claim-btn" type="submit">
+        🎁 Claim Daily Coins
+      </button>
+    </form>
+  {% else %}
+    <p class="claim-status-text">✅ Already claimed today</p>
+  {% endif %}
+</div>
+
 {% if current_user.received_buddy_requests %}
   <hr />
-  <h3>Incoming Buddy Requests</h3>
+  <h3 style="text-align: center; color: var(--primary);">Incoming Buddy Requests</h3>
   {% for req in current_user.received_buddy_requests %}
-    <div style="text-align: center;">
-      <p><strong>{{ req.sender.full_name }}</strong></p>
+    <div class="buddy-request">
+      <p>{{ req.sender.full_name }} wants to be your buddy 🤝</p>
       <form action="/buddy/accept/{{ req.sender_id }}" method="post" style="display: inline;">
         <button type="submit" class="buddy-btn request-action-btn">✅ Accept</button>
       </form>
@@ -285,6 +414,15 @@
   {% endfor %}
 {% endif %}
 
+{% if marked_read %}
+  <div style="color: green; font-weight: bold; margin-bottom: 10px;">
+    ✅ All notifications marked as read!
+  </div>
+{% endif %}
+
+<div class="see-online-container">
+  <a href="/online-users" class="see-online-btn">🟢 See Online Players</a>
+</div>
   </div>
 </div>
 {% endblock %}

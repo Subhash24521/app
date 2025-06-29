@@ -83,8 +83,8 @@
     {% for user in users %}
     <a href="/user/{{ user.id }}" class="user-card">
         <div class="user-icon">
-            <img src="{{ user.avatar_url or '/static/default-avatar.png' }}" alt="avatar" />
-            <p>{{ user.username }}</p>
+            <img src="{{ user.avatar_url if user.avatar_url else '/static/avatars/default-avatar.png' }}" alt="avatar" />
+            <p>{{ user.full_name or user.username }}</p>
         </div>
     </a>
     {% endfor %}
